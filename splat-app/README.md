@@ -4,7 +4,7 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with `create-next-a
 
 ## Features
 
-- **Next.js 15** with App Router
+- **Next.js 14.2.35** with App Router (security patched version)
 - **TypeScript** for type safety
 - **Tailwind CSS** for styling
 - **React Three Fiber** for 3D rendering
