@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@react-three/drei": "^9.93.0",
     "@react-three/fiber": "^8.15.12",
     "@mkkellogg/gaussian-splats-3d": "^0.4.7",
     "modal": "^0.6.0",
