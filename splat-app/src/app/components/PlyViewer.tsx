@@ -2,18 +2,16 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { PLYLoader } from 'three/examples/jsm/loaders/PLYLoader.js';
+import { Viewer as GaussianSplatViewer } from '@mkkellogg/gaussian-splats-3d';
 
 interface PlyViewerProps {
   plyUrl: string;
-  pointSize?: number;  // Allow customization
   showHelpers?: boolean;  // Show axes/grid for debugging
   backgroundColor?: number;  // Allow custom background
 }
 
 export default function PlyViewer({
   plyUrl,
-  pointSize = 0.03,  // Increased default size for better visibility
   showHelpers = false,
   backgroundColor = 0x1a1a1a,
 }: PlyViewerProps) {
@@ -21,233 +19,189 @@ export default function PlyViewer({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<string>('');
+  const [internalShowHelpers, setInternalShowHelpers] = useState(showHelpers);
+  const viewerRef = useRef<GaussianSplatViewer | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // Scene setup
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(backgroundColor);
+    console.log('Initializing Gaussian Splat Viewer');
+    console.log('PLY URL:', plyUrl);
 
-    // Camera setup with better initial values
-    const camera = new THREE.PerspectiveCamera(
-      60,  // FOV - 60 is more natural than 75
-      containerRef.current.clientWidth / containerRef.current.clientHeight,
-      0.01,  // Near plane - closer for small objects
-      1000   // Far plane - keep large for big point clouds
-    );
+    let viewer: GaussianSplatViewer | null = null;
+    let mounted = true;
 
-    // Renderer setup
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    containerRef.current.appendChild(renderer.domElement);
+    const initViewer = async () => {
+      try {
+        // Create Gaussian Splat viewer
+        viewer = new GaussianSplatViewer({
+          cameraUp: [0, 1, 0],
+          initialCameraPosition: [0, 0, 5],
+          initialCameraLookAt: [0, 0, 0],
+          sharedMemoryForWorkers: false,
+        });
 
-    // Controls setup with better defaults
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    controls.screenSpacePanning = true;  // Enable screen-space panning
-    controls.minDistance = 0.1;  // Allow getting very close
-    controls.maxDistance = 500;  // Allow zooming far out
-    controls.maxPolarAngle = Math.PI;  // Allow full rotation
+        viewerRef.current = viewer;
 
-    // Lighting (for any potential materials, though points don't need it)
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
-    scene.add(ambientLight);
+        // Set background color
+        if (viewer.renderer && viewer.renderer.scene) {
+          viewer.renderer.scene.background = new THREE.Color(backgroundColor);
+        }
 
-    // Add debugging helpers if enabled
-    let axesHelper: THREE.AxesHelper | null = null;
-    let gridHelper: THREE.GridHelper | null = null;
-    if (showHelpers) {
-      axesHelper = new THREE.AxesHelper(5);
-      scene.add(axesHelper);
-      gridHelper = new THREE.GridHelper(10, 10);
-      scene.add(gridHelper);
-    }
+        // Mount viewer first
+        if (containerRef.current && mounted) {
+          containerRef.current.appendChild(viewer.rootElement);
+        }
 
-    // Load PLY file
-    const loader = new PLYLoader();
-    loader.load(
-      plyUrl,
-      (geometry) => {
-        console.log('PLY loaded successfully');
-        console.log('Vertex count:', geometry.attributes.position.count);
-        console.log('Has colors:', !!geometry.attributes.color);
+        // Fetch the PLY data as blob
+        console.log('Fetching PLY data from:', plyUrl);
+        const response = await fetch(plyUrl);
+        const blob = await response.blob();
+        console.log('PLY blob fetched, size:', blob.size, 'bytes');
 
-        // Step 1: Compute bounding box FIRST (before any transformations)
-        geometry.computeBoundingBox();
-        const boundingBox = geometry.boundingBox!;
+        // Create a temporary URL for the blob with .ply extension
+        const file = new File([blob], 'model.ply', { type: 'model/ply' });
+        const tempUrl = URL.createObjectURL(file);
+        console.log('Created temporary PLY URL');
 
-        // Step 2: Calculate center and size
-        const center = new THREE.Vector3();
-        boundingBox.getCenter(center);
+        if (!mounted) {
+          console.log('Component unmounted, aborting load');
+          URL.revokeObjectURL(tempUrl);
+          return;
+        }
+
+        // Add the splat scene using the temporary URL
+        await viewer.addSplatScene(tempUrl, {
+          showLoadingUI: false,
+          progressiveLoad: true,
+          splatAlphaRemovalThreshold: 5,
+          onProgress: (progress: number, message: string) => {
+            console.log(`Loading: ${(progress * 100).toFixed(0)}% - ${message}`);
+          },
+        });
+
+        console.log('Splat scene added to viewer');
+
+        // Clean up temporary URL
+        URL.revokeObjectURL(tempUrl);
+      } catch (error) {
+        console.error('Error in initViewer:', error);
+        throw error;
+      }
+    };
+
+    const loadSplat = initViewer;
+
+    loadSplat()
+    .then(() => {
+      console.log('Gaussian splat loaded successfully');
+
+      // Get scene info
+      const splatMesh = viewer.getSplatMesh();
+      if (splatMesh) {
+        const splatCount = splatMesh.getSplatCount();
+        console.log('Splat count:', splatCount);
+
+        // Calculate bounding box
+        const boundingBox = new THREE.Box3();
+        splatMesh.computeBoundingBox();
+        if (splatMesh.geometry && splatMesh.geometry.boundingBox) {
+          boundingBox.copy(splatMesh.geometry.boundingBox);
+        }
 
         const size = new THREE.Vector3();
         boundingBox.getSize(size);
 
-        // Step 3: Calculate bounding sphere radius
-        const maxDim = Math.max(size.x, size.y, size.z);
-        const boundingSphereRadius = maxDim / 2;
+        const center = new THREE.Vector3();
+        boundingBox.getCenter(center);
 
         console.log('Bounding box:', {
           min: boundingBox.min.toArray(),
           max: boundingBox.max.toArray(),
-          center: center.toArray(),
           size: size.toArray(),
-          boundingSphereRadius,
+          center: center.toArray(),
         });
 
-        // Step 4: Center geometry at origin
-        geometry.translate(-center.x, -center.y, -center.z);
+        // Position camera based on bounding box
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const cameraDistance = maxDim * 2;
 
-        // Step 5: Scale geometry to fit in a reasonable size (e.g., ~2 units)
-        const targetSize = 2.0;  // Target size in world units
-        const scaleFactor = targetSize / maxDim;
-        geometry.scale(scaleFactor, scaleFactor, scaleFactor);
-
-        console.log('Applied transformations:', {
-          translation: center.toArray().map(v => -v),
-          scale: scaleFactor,
-          finalSize: maxDim * scaleFactor,
-        });
-
-        // Step 6: Create material with proper settings for point clouds
-        const material = new THREE.PointsMaterial({
-          size: pointSize,
-          vertexColors: !!geometry.attributes.color,  // Use vertex colors if available
-          sizeAttenuation: true,  // Points get smaller with distance
-          transparent: false,
-          opacity: 1.0,
-          fog: false,
-        });
-
-        // If no vertex colors, use a visible default color
-        if (!geometry.attributes.color) {
-          material.color = new THREE.Color(0xffffff);  // White is more visible
-          console.log('No vertex colors found, using default white');
-        } else {
-          console.log('Using vertex colors from PLY file');
-        }
-
-        // Step 7: Create points mesh and add to scene
-        const points = new THREE.Points(geometry, material);
-        scene.add(points);
-
-        // Step 8: Position camera based on bounding sphere
-        // Camera should be far enough to see entire object
-        const scaledRadius = boundingSphereRadius * scaleFactor;
-        const cameraDistance = scaledRadius * 3;  // 3x radius for good view
-
-        camera.position.set(
-          cameraDistance,
-          cameraDistance * 0.5,  // Slightly elevated
-          cameraDistance
+        viewer.camera.position.set(
+          center.x + cameraDistance,
+          center.y + cameraDistance * 0.5,
+          center.z + cameraDistance
         );
-        camera.lookAt(0, 0, 0);  // Look at center (origin)
+        viewer.camera.lookAt(center);
+        viewer.controls.target.copy(center);
+        viewer.controls.update();
 
-        // Update controls target to look at center
-        controls.target.set(0, 0, 0);
-        controls.update();
+        console.log('Camera positioned at:', viewer.camera.position.toArray());
+        console.log('Looking at:', center.toArray());
 
-        // Update camera clipping planes based on model size
-        camera.near = scaledRadius * 0.01;
-        camera.far = scaledRadius * 100;
-        camera.updateProjectionMatrix();
-
-        console.log('Camera setup:', {
-          position: camera.position.toArray(),
-          distance: cameraDistance,
-          near: camera.near,
-          far: camera.far,
-        });
-
-        // Update debug info
         setDebugInfo(
-          `Points: ${geometry.attributes.position.count.toLocaleString()} | ` +
-          `Size: ${size.x.toFixed(2)}×${size.y.toFixed(2)}×${size.z.toFixed(2)} | ` +
-          `Scaled: ${(maxDim * scaleFactor).toFixed(2)} units`
+          `Splats: ${splatCount.toLocaleString()} | ` +
+          `Size: ${size.x.toFixed(2)}×${size.y.toFixed(2)}×${size.z.toFixed(2)}`
         );
-
-        setLoading(false);
-      },
-      (progress) => {
-        const percent = progress.total > 0
-          ? ((progress.loaded / progress.total) * 100).toFixed(0)
-          : '...';
-        console.log(`Loading PLY: ${percent}%`);
-      },
-      (error) => {
-        console.error('Error loading PLY:', error);
-        setError('Failed to load 3D point cloud');
-        setLoading(false);
       }
-    );
 
-    // Animation loop
-    let animationId: number;
-    function animate() {
-      animationId = requestAnimationFrame(animate);
-      controls.update();
-      renderer.render(scene, camera);
-    }
-    animate();
+      // Add helpers if requested
+      if (internalShowHelpers && viewer.renderer && viewer.renderer.scene) {
+        const axesHelper = new THREE.AxesHelper(5);
+        const gridHelper = new THREE.GridHelper(10, 10, 0x444444, 0x222222);
+        viewer.renderer.scene.add(axesHelper);
+        viewer.renderer.scene.add(gridHelper);
+      }
 
-    // Handle window resize
-    const handleResize = () => {
-      if (!containerRef.current) return;
-      camera.aspect = containerRef.current.clientWidth / containerRef.current.clientHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
-    };
-    window.addEventListener('resize', handleResize);
+      setLoading(false);
+    })
+    .catch((err: Error) => {
+      console.error('Error loading Gaussian splat:', err);
+      setError(err.message || 'Failed to load 3D Gaussian splat');
+      setLoading(false);
+    });
 
     // Cleanup
     return () => {
-      window.removeEventListener('resize', handleResize);
-      cancelAnimationFrame(animationId);
-      renderer.dispose();
-      controls.dispose();
-
-      // Clean up helpers
-      if (axesHelper) scene.remove(axesHelper);
-      if (gridHelper) scene.remove(gridHelper);
-
-      // Clean up geometry and materials
-      scene.traverse((object) => {
-        if (object instanceof THREE.Points) {
-          object.geometry.dispose();
-          if (object.material instanceof THREE.Material) {
-            object.material.dispose();
-          }
+      console.log('Cleaning up Gaussian Splat Viewer');
+      mounted = false;
+      if (viewer) {
+        try {
+          viewer.dispose();
+        } catch (e) {
+          console.error('Error disposing viewer:', e);
         }
-      });
-
-      if (containerRef.current && containerRef.current.contains(renderer.domElement)) {
-        containerRef.current.removeChild(renderer.domElement);
+      }
+      if (containerRef.current && viewer && viewer.rootElement) {
+        try {
+          if (containerRef.current.contains(viewer.rootElement)) {
+            containerRef.current.removeChild(viewer.rootElement);
+          }
+        } catch (e) {
+          console.error('Error removing viewer element:', e);
+        }
       }
     };
-  }, [plyUrl, pointSize, showHelpers, backgroundColor]);
+  }, [plyUrl, backgroundColor, internalShowHelpers]);
 
   return (
     <div className="relative w-full h-[600px] rounded-2xl overflow-hidden bg-black mx-auto max-w-4xl">
       <div ref={containerRef} className="w-full h-full" />
 
       {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-          <div className="text-white text-xl">Loading 3D point cloud...</div>
+        <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
+          <div className="text-white text-xl">Loading Gaussian splat...</div>
         </div>
       )}
 
       {error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
           <div className="text-red-500 text-xl">{error}</div>
         </div>
       )}
 
       {!loading && !error && (
         <>
-          <div className="absolute top-4 right-4 bg-black/70 text-white px-4 py-2 rounded-xl text-sm backdrop-blur-sm">
+          <div className="absolute top-4 right-4 bg-black/70 text-white px-4 py-2 rounded-xl text-sm backdrop-blur-sm z-10">
             <div className="font-semibold mb-1">Controls:</div>
             <div className="text-xs opacity-80">
               Left drag: Rotate • Right drag: Pan • Scroll: Zoom
@@ -255,10 +209,18 @@ export default function PlyViewer({
           </div>
 
           {debugInfo && (
-            <div className="absolute bottom-4 left-4 bg-black/70 text-white px-3 py-2 rounded-xl text-xs font-mono backdrop-blur-sm">
+            <div className="absolute bottom-4 left-4 bg-black/70 text-white px-3 py-2 rounded-xl text-xs font-mono backdrop-blur-sm z-10">
               {debugInfo}
             </div>
           )}
+
+          <button
+            onClick={() => setInternalShowHelpers(!internalShowHelpers)}
+            className="absolute top-4 left-4 bg-black/70 hover:bg-black/80 text-white px-3 py-2 rounded-xl text-xs backdrop-blur-sm transition-colors z-10"
+            title="Toggle axes and grid helpers"
+          >
+            {internalShowHelpers ? '🔍 Hide Helpers' : '🔍 Show Helpers'}
+          </button>
         </>
       )}
     </div>
