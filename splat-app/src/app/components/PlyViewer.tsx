@@ -101,8 +101,8 @@ export default function PlyViewer({
           const splatCount = splatMesh.getSplatCount();
           console.log('Splat count:', splatCount);
 
-          // Calculate bounding box using setFromObject
-          const boundingBox = new THREE.Box3().setFromObject(splatMesh);
+          // Use the mesh's built-in getBoundingBox method (ignoreViewFrustum = true)
+          const boundingBox = splatMesh.getBoundingBox(new THREE.Box3(), true);
 
           const size = new THREE.Vector3();
           boundingBox.getSize(size);

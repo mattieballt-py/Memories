@@ -38,7 +38,7 @@ declare module '@mkkellogg/gaussian-splats-3d' {
     start(): void;
     stop(): void;
     dispose(): void;
-    getSplatMesh(): any;
+    getSplatMesh(): SplatMesh | null;
 
     rootElement: HTMLElement;
     camera: THREE.Camera;
@@ -46,6 +46,11 @@ declare module '@mkkellogg/gaussian-splats-3d' {
     scene: THREE.Scene;
     controls: any;
     splatMesh: any;
+  }
+
+  export class SplatMesh extends THREE.Object3D {
+    getSplatCount(): number;
+    getBoundingBox(target?: THREE.Box3, ignoreViewFrustum?: boolean): THREE.Box3;
   }
 
   export const SceneRevealMode: {
