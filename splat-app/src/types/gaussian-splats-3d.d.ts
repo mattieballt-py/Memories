@@ -30,14 +30,17 @@ declare module '@mkkellogg/gaussian-splats-3d' {
         rotation?: [number, number, number, number];
         scale?: [number, number, number];
         showLoadingUI?: boolean;
-        onProgress?: (progress: number, message: string, stage: string) => void;
+        progressiveLoad?: boolean;
+        onProgress?: (progress: number, message: string, stage?: string) => void;
       }
     ): Promise<void>;
 
     start(): void;
     stop(): void;
     dispose(): void;
+    getSplatMesh(): any;
 
+    rootElement: HTMLElement;
     camera: THREE.Camera;
     renderer: THREE.WebGLRenderer;
     scene: THREE.Scene;
