@@ -35,7 +35,7 @@ export default function PlyViewer({
       try {
         // Create Gaussian Splat viewer
         viewer = new GaussianSplatViewer({
-          cameraUp: [0, 1, 0],
+          cameraUp: [0, -1, 0],  // Flip up vector for correct orientation
           initialCameraPosition: [0, 0, 5],
           initialCameraLookAt: [0, 0, 0],
           sharedMemoryForWorkers: false,
@@ -50,7 +50,10 @@ export default function PlyViewer({
 
         // Mount viewer first
         if (containerRef.current && mounted) {
+          console.log('Appending viewer to DOM');
           containerRef.current.appendChild(viewer.rootElement);
+          console.log('Viewer mounted, starting render');
+          viewer.start();
         }
 
         // Add the splat scene directly from HTTP URL
@@ -85,17 +88,15 @@ export default function PlyViewer({
       console.log('Gaussian splat loaded successfully');
 
       // Get scene info
-      const splatMesh = viewer.getSplatMesh();
+      const splatMesh = viewer?.getSplatMesh();
+      console.log('Got splat mesh:', splatMesh);
+
       if (splatMesh) {
         const splatCount = splatMesh.getSplatCount();
         console.log('Splat count:', splatCount);
 
-        // Calculate bounding box
-        const boundingBox = new THREE.Box3();
-        splatMesh.computeBoundingBox();
-        if (splatMesh.geometry && splatMesh.geometry.boundingBox) {
-          boundingBox.copy(splatMesh.geometry.boundingBox);
-        }
+        // Calculate bounding box using setFromObject
+        const boundingBox = new THREE.Box3().setFromObject(splatMesh);
 
         const size = new THREE.Vector3();
         boundingBox.getSize(size);
@@ -111,16 +112,26 @@ export default function PlyViewer({
         });
 
         // Position camera based on bounding box
-        const maxDim = Math.max(size.x, size.y, size.z);
-        const cameraDistance = maxDim * 2;
+        // If size is 0, use a default distance
+        const maxDim = Math.max(size.x, size.y, size.z) || 5;
+        const cameraDistance = maxDim * 2.5;
 
+        // Position camera directly in front (along Z axis) for frontal view
         viewer.camera.position.set(
-          center.x + cameraDistance,
-          center.y + cameraDistance * 0.5,
+          center.x,
+          center.y,
           center.z + cameraDistance
         );
         viewer.camera.lookAt(center);
         viewer.controls.target.copy(center);
+
+        // Enable full rotation
+        viewer.controls.enableRotate = true;
+        viewer.controls.enablePan = true;
+        viewer.controls.enableZoom = true;
+        viewer.controls.minPolarAngle = 0; // Allow full vertical rotation
+        viewer.controls.maxPolarAngle = Math.PI; // Allow full vertical rotation
+
         viewer.controls.update();
 
         console.log('Camera positioned at:', viewer.camera.position.toArray());
@@ -152,20 +163,24 @@ export default function PlyViewer({
     return () => {
       console.log('Cleaning up Gaussian Splat Viewer');
       mounted = false;
-      if (viewer) {
-        try {
-          viewer.dispose();
-        } catch (e) {
-          console.error('Error disposing viewer:', e);
-        }
-      }
+
+      // Remove DOM element first (before disposing viewer)
       if (containerRef.current && viewer && viewer.rootElement) {
         try {
           if (containerRef.current.contains(viewer.rootElement)) {
             containerRef.current.removeChild(viewer.rootElement);
           }
         } catch (e) {
-          console.error('Error removing viewer element:', e);
+          // Silently ignore removeChild errors in StrictMode
+        }
+      }
+
+      // Then dispose the viewer
+      if (viewer) {
+        try {
+          viewer.dispose();
+        } catch (e) {
+          // Silently ignore disposal errors in StrictMode
         }
       }
     };
