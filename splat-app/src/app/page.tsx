@@ -64,8 +64,9 @@ export default function Home() {
     <main className="min-h-screen bg-gradient-to-br from-slate-900 to-blue-900">
       <div className="container mx-auto px-6 py-20">
         <h1 className="text-5xl font-bold text-white mb-8">
-          1 Photo → 3D Point Cloud
+          Timeless Mind
         </h1>
+        <p className="text-white text-lg mb-8"> Capture Your World </p>
 
         {!plyUrl ? (
           <div className="max-w-md mx-auto">
