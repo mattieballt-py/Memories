@@ -53,25 +53,16 @@ export default function PlyViewer({
           containerRef.current.appendChild(viewer.rootElement);
         }
 
-        // Fetch the PLY data as blob
-        console.log('Fetching PLY data from:', plyUrl);
-        const response = await fetch(plyUrl);
-        const blob = await response.blob();
-        console.log('PLY blob fetched, size:', blob.size, 'bytes');
-
-        // Create a temporary URL for the blob with .ply extension
-        const file = new File([blob], 'model.ply', { type: 'model/ply' });
-        const tempUrl = URL.createObjectURL(file);
-        console.log('Created temporary PLY URL');
+        // Add the splat scene directly from HTTP URL
+        // The viewer library properly handles HTTP/HTTPS URLs
+        console.log('Loading splat from URL:', plyUrl);
 
         if (!mounted) {
           console.log('Component unmounted, aborting load');
-          URL.revokeObjectURL(tempUrl);
           return;
         }
 
-        // Add the splat scene using the temporary URL
-        await viewer.addSplatScene(tempUrl, {
+        await viewer.addSplatScene(plyUrl, {
           showLoadingUI: false,
           progressiveLoad: true,
           splatAlphaRemovalThreshold: 5,
@@ -81,9 +72,6 @@ export default function PlyViewer({
         });
 
         console.log('Splat scene added to viewer');
-
-        // Clean up temporary URL
-        URL.revokeObjectURL(tempUrl);
       } catch (error) {
         console.error('Error in initViewer:', error);
         throw error;

@@ -36,26 +36,22 @@ export default function Home() {
         throw new Error(`Upload failed: ${errorMessage}`);
       }
 
-      // Check if response is binary (PLY file) or JSON (error)
-      const contentType = response.headers.get('content-type');
+      // API now returns JSON with ply_url (uploaded to Vercel Blob)
+      const data = await response.json();
 
-      if (contentType?.includes('application/json')) {
-        const data = await response.json();
-        if (data.error) {
-          throw new Error(data.error);
-        }
-      } else {
-        // Response is binary PLY file
-        const plyBlob = await response.blob();
-
-        // Create a local blob URL
-        const blobUrl = URL.createObjectURL(plyBlob);
-
-        console.log('Created blob URL:', blobUrl);
-        console.log('Blob size:', plyBlob.size, 'bytes');
-
-        setPlyUrl(blobUrl);
+      if (data.error) {
+        throw new Error(data.error);
       }
+
+      if (!data.ply_url) {
+        throw new Error('No PLY URL returned from server');
+      }
+
+      console.log('Received PLY URL:', data.ply_url);
+      console.log('PLY size:', data.size, 'bytes');
+
+      // Set the public HTTP URL directly - no blob URL needed!
+      setPlyUrl(data.ply_url);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed');
       console.error('Upload error:', err);

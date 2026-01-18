@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { put } from '@vercel/blob';
 
 export async function POST(request: NextRequest) {
   try {
@@ -51,12 +52,20 @@ export async function POST(request: NextRequest) {
       type: plyBlob.type,
     });
 
-    // Return the PLY file as a blob to the frontend
-    return new NextResponse(plyBlob, {
-      headers: {
-        'Content-Type': 'application/octet-stream',
-        'Content-Disposition': 'attachment; filename="output.ply"',
-      },
+    // Upload PLY to Vercel Blob for public access
+    // This is necessary because the Gaussian splat viewer only accepts HTTP URLs
+    const buffer = Buffer.from(await plyBlob.arrayBuffer());
+    const blobResult = await put(`splats/splat-${Date.now()}.ply`, buffer, {
+      access: 'public',
+      addRandomSuffix: false,
+    });
+
+    console.log('Uploaded PLY to Vercel Blob:', blobResult.url);
+
+    // Return the public URL as JSON
+    return NextResponse.json({
+      ply_url: blobResult.url,
+      size: plyBlob.size,
     });
   } catch (error) {
     console.error('Splat processing error:', error);
