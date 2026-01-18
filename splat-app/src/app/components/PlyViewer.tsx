@@ -87,8 +87,13 @@ export default function PlyViewer({
     .then(() => {
       console.log('Gaussian splat loaded successfully');
 
+      if (!viewer) {
+        console.error('Viewer is null after loading');
+        return;
+      }
+
       // Get scene info
-      const splatMesh = viewer?.getSplatMesh();
+      const splatMesh = viewer.getSplatMesh();
       console.log('Got splat mesh:', splatMesh);
 
       if (splatMesh) {
