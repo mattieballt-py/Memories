@@ -2,38 +2,55 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    // 1. Get uploaded image from frontend
+    // Get uploaded image from frontend
     const formData = await request.formData();
-    const file = formData.get('image') as File;
-    
+    const file = formData.get('file') as File;
+
     if (!file) {
       return NextResponse.json({ error: 'No image uploaded' }, { status: 400 });
     }
 
-    // 2. Upload image to temporary storage (Vercel Blob)
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    
-    // Vercel Blob (free tier works)
-    const blob = await put(`splat-${Date.now()}.jpg`, buffer, {
-      access: 'public',
-    });
-    
-    const imageUrl = `https://blob.vercel-storage.com/${blob.path}`;
+    // Prepare formData for Modal backend
+    const modalFormData = new FormData();
+    modalFormData.append('file', file);
 
-    // 3. Call Modal GPU function (replace with YOUR Modal function name)
-    const modalResponse = await fetch('https://your-modal-app--create-splat-modal.modal.run', {
+    // Get Modal endpoint URL from environment variable
+    const modalApiUrl =
+      process.env.NEXT_PUBLIC_SPLAT_API_URL ||
+      'https://modal.com/apps/mattieballt-py/main/deployed/sharp-api';
+
+    // Call Modal backend with the image file
+    const modalResponse = await fetch(modalApiUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ image_url: imageUrl }),
+      body: modalFormData,
     });
 
-    const { splat_url } = await modalResponse.json();
-    
-    return NextResponse.json({ splatUrl: splat_url });
-    
+    if (!modalResponse.ok) {
+      const errorText = await modalResponse.text();
+      console.error('Modal API error:', errorText);
+      return NextResponse.json(
+        { error: `Backend processing failed: ${modalResponse.statusText}` },
+        { status: modalResponse.status }
+      );
+    }
+
+    const data = await modalResponse.json();
+
+    // Modal returns { "ply_url": "https://..." }
+    if (!data.ply_url) {
+      console.error('Invalid response from Modal:', data);
+      return NextResponse.json(
+        { error: 'Invalid response from backend' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ ply_url: data.ply_url });
   } catch (error) {
-    console.error('Splat error:', error);
-    return NextResponse.json({ error: 'Processing failed' }, { status: 500 });
+    console.error('Splat processing error:', error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Processing failed' },
+      { status: 500 }
+    );
   }
 }
