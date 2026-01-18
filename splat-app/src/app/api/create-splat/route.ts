@@ -19,10 +19,21 @@ export async function POST(request: NextRequest) {
       process.env.NEXT_PUBLIC_SPLAT_API_URL ||
       'https://modal.com/apps/mattieballt-py/main/deployed/sharp-api';
 
+    console.log('Calling Modal API:', modalApiUrl);
+    console.log('File details:', {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+    });
+
     // Call Modal backend with the image file
     const modalResponse = await fetch(modalApiUrl, {
       method: 'POST',
       body: modalFormData,
+      // Add headers if Modal requires authentication
+      // headers: {
+      //   'Authorization': `Bearer ${process.env.MODAL_API_KEY}`,
+      // },
     });
 
     if (!modalResponse.ok) {

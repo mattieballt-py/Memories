@@ -21,7 +21,10 @@ export default function Home() {
       });
 
       if (!response.ok) {
-        throw new Error(`Upload failed: ${response.statusText}`);
+        // Try to get detailed error message from response
+        const errorData = await response.json().catch(() => null);
+        const errorMessage = errorData?.error || response.statusText;
+        throw new Error(`Upload failed: ${errorMessage}`);
       }
 
       const data = await response.json();
