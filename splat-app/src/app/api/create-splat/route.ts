@@ -13,11 +13,13 @@ export async function POST(request: NextRequest) {
     // Prepare formData for Modal backend
     const modalFormData = new FormData();
     modalFormData.append('file', file);
+    // Optional: add focal length if needed
+    // modalFormData.append('f_px', '1000');
 
-    // Get Modal endpoint URL from environment variable
+    // Get Modal endpoint URL from environment variable (should include /predict/ply)
     const modalApiUrl =
       process.env.NEXT_PUBLIC_SPLAT_API_URL ||
-      'https://modal.com/apps/mattieballt-py/main/deployed/sharp-api';
+      'https://mattieballt-py--sharp-api-fastapi-app.modal.run/predict/ply';
 
     console.log('Calling Modal API:', modalApiUrl);
     console.log('File details:', {
@@ -30,10 +32,6 @@ export async function POST(request: NextRequest) {
     const modalResponse = await fetch(modalApiUrl, {
       method: 'POST',
       body: modalFormData,
-      // Add headers if Modal requires authentication
-      // headers: {
-      //   'Authorization': `Bearer ${process.env.MODAL_API_KEY}`,
-      // },
     });
 
     if (!modalResponse.ok) {
@@ -45,18 +43,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const data = await modalResponse.json();
+    // Modal returns binary PLY file data, not JSON
+    const plyBlob = await modalResponse.blob();
 
-    // Modal returns { "ply_url": "https://..." }
-    if (!data.ply_url) {
-      console.error('Invalid response from Modal:', data);
-      return NextResponse.json(
-        { error: 'Invalid response from backend' },
-        { status: 500 }
-      );
-    }
+    console.log('Received PLY file:', {
+      size: plyBlob.size,
+      type: plyBlob.type,
+    });
 
-    return NextResponse.json({ ply_url: data.ply_url });
+    // Return the PLY file as a blob to the frontend
+    return new NextResponse(plyBlob, {
+      headers: {
+        'Content-Type': 'application/octet-stream',
+        'Content-Disposition': 'attachment; filename="output.ply"',
+      },
+    });
   } catch (error) {
     console.error('Splat processing error:', error);
     return NextResponse.json(

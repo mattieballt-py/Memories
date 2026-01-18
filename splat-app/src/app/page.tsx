@@ -1,11 +1,20 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import PlyViewer from './components/PlyViewer';
 
 export default function Home() {
   const [plyUrl, setPlyUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Cleanup blob URL when component unmounts or plyUrl changes
+  useEffect(() => {
+    return () => {
+      if (plyUrl && plyUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(plyUrl);
+      }
+    };
+  }, [plyUrl]);
 
   const handleUpload = async (file: File) => {
     setUploading(true);
@@ -27,13 +36,26 @@ export default function Home() {
         throw new Error(`Upload failed: ${errorMessage}`);
       }
 
-      const data = await response.json();
+      // Check if response is binary (PLY file) or JSON (error)
+      const contentType = response.headers.get('content-type');
 
-      if (data.error) {
-        throw new Error(data.error);
+      if (contentType?.includes('application/json')) {
+        const data = await response.json();
+        if (data.error) {
+          throw new Error(data.error);
+        }
+      } else {
+        // Response is binary PLY file
+        const plyBlob = await response.blob();
+
+        // Create a local blob URL
+        const blobUrl = URL.createObjectURL(plyBlob);
+
+        console.log('Created blob URL:', blobUrl);
+        console.log('Blob size:', plyBlob.size, 'bytes');
+
+        setPlyUrl(blobUrl);
       }
-
-      setPlyUrl(data.ply_url);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed');
       console.error('Upload error:', err);
@@ -83,9 +105,19 @@ export default function Home() {
         ) : (
           <div>
             <PlyViewer plyUrl={plyUrl} />
-            <div className="text-center mt-6">
+            <div className="flex gap-4 justify-center mt-6">
+              <a
+                href={plyUrl}
+                download="output.ply"
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors"
+              >
+                Download PLY File
+              </a>
               <button
                 onClick={() => {
+                  if (plyUrl && plyUrl.startsWith('blob:')) {
+                    URL.revokeObjectURL(plyUrl);
+                  }
                   setPlyUrl(null);
                   setError(null);
                 }}

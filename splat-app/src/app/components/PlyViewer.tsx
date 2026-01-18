@@ -6,28 +6,36 @@ import { PLYLoader } from 'three/examples/jsm/loaders/PLYLoader.js';
 
 interface PlyViewerProps {
   plyUrl: string;
+  pointSize?: number;  // Allow customization
+  showHelpers?: boolean;  // Show axes/grid for debugging
+  backgroundColor?: number;  // Allow custom background
 }
 
-export default function PlyViewer({ plyUrl }: PlyViewerProps) {
+export default function PlyViewer({
+  plyUrl,
+  pointSize = 0.03,  // Increased default size for better visibility
+  showHelpers = false,
+  backgroundColor = 0x1a1a1a,
+}: PlyViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string>('');
 
   useEffect(() => {
     if (!containerRef.current) return;
 
     // Scene setup
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x000000);
+    scene.background = new THREE.Color(backgroundColor);
 
-    // Camera setup
+    // Camera setup with better initial values
     const camera = new THREE.PerspectiveCamera(
-      75,
+      60,  // FOV - 60 is more natural than 75
       containerRef.current.clientWidth / containerRef.current.clientHeight,
-      0.1,
-      1000
+      0.01,  // Near plane - closer for small objects
+      1000   // Far plane - keep large for big point clouds
     );
-    camera.position.set(0, 0, 5);
 
     // Renderer setup
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -35,61 +43,139 @@ export default function PlyViewer({ plyUrl }: PlyViewerProps) {
     renderer.setPixelRatio(window.devicePixelRatio);
     containerRef.current.appendChild(renderer.domElement);
 
-    // Controls setup
+    // Controls setup with better defaults
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.screenSpacePanning = false;
-    controls.minDistance = 1;
-    controls.maxDistance = 100;
-    controls.maxPolarAngle = Math.PI;
+    controls.screenSpacePanning = true;  // Enable screen-space panning
+    controls.minDistance = 0.1;  // Allow getting very close
+    controls.maxDistance = 500;  // Allow zooming far out
+    controls.maxPolarAngle = Math.PI;  // Allow full rotation
 
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    // Lighting (for any potential materials, though points don't need it)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
     scene.add(ambientLight);
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(0, 1, 1);
-    scene.add(directionalLight);
+
+    // Add debugging helpers if enabled
+    let axesHelper: THREE.AxesHelper | null = null;
+    let gridHelper: THREE.GridHelper | null = null;
+    if (showHelpers) {
+      axesHelper = new THREE.AxesHelper(5);
+      scene.add(axesHelper);
+      gridHelper = new THREE.GridHelper(10, 10);
+      scene.add(gridHelper);
+    }
 
     // Load PLY file
     const loader = new PLYLoader();
     loader.load(
       plyUrl,
       (geometry) => {
-        // Center and scale geometry
+        console.log('PLY loaded successfully');
+        console.log('Vertex count:', geometry.attributes.position.count);
+        console.log('Has colors:', !!geometry.attributes.color);
+
+        // Step 1: Compute bounding box FIRST (before any transformations)
         geometry.computeBoundingBox();
+        const boundingBox = geometry.boundingBox!;
+
+        // Step 2: Calculate center and size
         const center = new THREE.Vector3();
-        geometry.boundingBox!.getCenter(center);
-        geometry.translate(-center.x, -center.y, -center.z);
+        boundingBox.getCenter(center);
 
-        const maxSize = Math.max(
-          geometry.boundingBox!.max.x - geometry.boundingBox!.min.x,
-          geometry.boundingBox!.max.y - geometry.boundingBox!.min.y,
-          geometry.boundingBox!.max.z - geometry.boundingBox!.min.z
-        );
-        const scale = 2 / maxSize;
-        geometry.scale(scale, scale, scale);
+        const size = new THREE.Vector3();
+        boundingBox.getSize(size);
 
-        // Create point cloud material with vertex colors if available
-        const material = new THREE.PointsMaterial({
-          size: 0.01,
-          vertexColors: geometry.attributes.color ? true : false,
-          sizeAttenuation: true,
+        // Step 3: Calculate bounding sphere radius
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const boundingSphereRadius = maxDim / 2;
+
+        console.log('Bounding box:', {
+          min: boundingBox.min.toArray(),
+          max: boundingBox.max.toArray(),
+          center: center.toArray(),
+          size: size.toArray(),
+          boundingSphereRadius,
         });
 
-        // If no vertex colors, use a default color
+        // Step 4: Center geometry at origin
+        geometry.translate(-center.x, -center.y, -center.z);
+
+        // Step 5: Scale geometry to fit in a reasonable size (e.g., ~2 units)
+        const targetSize = 2.0;  // Target size in world units
+        const scaleFactor = targetSize / maxDim;
+        geometry.scale(scaleFactor, scaleFactor, scaleFactor);
+
+        console.log('Applied transformations:', {
+          translation: center.toArray().map(v => -v),
+          scale: scaleFactor,
+          finalSize: maxDim * scaleFactor,
+        });
+
+        // Step 6: Create material with proper settings for point clouds
+        const material = new THREE.PointsMaterial({
+          size: pointSize,
+          vertexColors: !!geometry.attributes.color,  // Use vertex colors if available
+          sizeAttenuation: true,  // Points get smaller with distance
+          transparent: false,
+          opacity: 1.0,
+          fog: false,
+        });
+
+        // If no vertex colors, use a visible default color
         if (!geometry.attributes.color) {
-          material.color = new THREE.Color(0x00aaff);
+          material.color = new THREE.Color(0xffffff);  // White is more visible
+          console.log('No vertex colors found, using default white');
+        } else {
+          console.log('Using vertex colors from PLY file');
         }
 
-        // Create points mesh
+        // Step 7: Create points mesh and add to scene
         const points = new THREE.Points(geometry, material);
         scene.add(points);
+
+        // Step 8: Position camera based on bounding sphere
+        // Camera should be far enough to see entire object
+        const scaledRadius = boundingSphereRadius * scaleFactor;
+        const cameraDistance = scaledRadius * 3;  // 3x radius for good view
+
+        camera.position.set(
+          cameraDistance,
+          cameraDistance * 0.5,  // Slightly elevated
+          cameraDistance
+        );
+        camera.lookAt(0, 0, 0);  // Look at center (origin)
+
+        // Update controls target to look at center
+        controls.target.set(0, 0, 0);
+        controls.update();
+
+        // Update camera clipping planes based on model size
+        camera.near = scaledRadius * 0.01;
+        camera.far = scaledRadius * 100;
+        camera.updateProjectionMatrix();
+
+        console.log('Camera setup:', {
+          position: camera.position.toArray(),
+          distance: cameraDistance,
+          near: camera.near,
+          far: camera.far,
+        });
+
+        // Update debug info
+        setDebugInfo(
+          `Points: ${geometry.attributes.position.count.toLocaleString()} | ` +
+          `Size: ${size.x.toFixed(2)}×${size.y.toFixed(2)}×${size.z.toFixed(2)} | ` +
+          `Scaled: ${(maxDim * scaleFactor).toFixed(2)} units`
+        );
 
         setLoading(false);
       },
       (progress) => {
-        console.log('Loading PLY:', (progress.loaded / progress.total) * 100 + '%');
+        const percent = progress.total > 0
+          ? ((progress.loaded / progress.total) * 100).toFixed(0)
+          : '...';
+        console.log(`Loading PLY: ${percent}%`);
       },
       (error) => {
         console.error('Error loading PLY:', error);
@@ -99,8 +185,9 @@ export default function PlyViewer({ plyUrl }: PlyViewerProps) {
     );
 
     // Animation loop
+    let animationId: number;
     function animate() {
-      requestAnimationFrame(animate);
+      animationId = requestAnimationFrame(animate);
       controls.update();
       renderer.render(scene, camera);
     }
@@ -118,13 +205,29 @@ export default function PlyViewer({ plyUrl }: PlyViewerProps) {
     // Cleanup
     return () => {
       window.removeEventListener('resize', handleResize);
+      cancelAnimationFrame(animationId);
       renderer.dispose();
       controls.dispose();
-      if (containerRef.current) {
+
+      // Clean up helpers
+      if (axesHelper) scene.remove(axesHelper);
+      if (gridHelper) scene.remove(gridHelper);
+
+      // Clean up geometry and materials
+      scene.traverse((object) => {
+        if (object instanceof THREE.Points) {
+          object.geometry.dispose();
+          if (object.material instanceof THREE.Material) {
+            object.material.dispose();
+          }
+        }
+      });
+
+      if (containerRef.current && containerRef.current.contains(renderer.domElement)) {
         containerRef.current.removeChild(renderer.domElement);
       }
     };
-  }, [plyUrl]);
+  }, [plyUrl, pointSize, showHelpers, backgroundColor]);
 
   return (
     <div className="relative w-full h-[600px] rounded-2xl overflow-hidden bg-black mx-auto max-w-4xl">
@@ -143,9 +246,20 @@ export default function PlyViewer({ plyUrl }: PlyViewerProps) {
       )}
 
       {!loading && !error && (
-        <div className="absolute top-4 right-4 bg-black/50 text-white px-4 py-2 rounded-xl text-sm">
-          Drag to rotate • Scroll to zoom
-        </div>
+        <>
+          <div className="absolute top-4 right-4 bg-black/70 text-white px-4 py-2 rounded-xl text-sm backdrop-blur-sm">
+            <div className="font-semibold mb-1">Controls:</div>
+            <div className="text-xs opacity-80">
+              Left drag: Rotate • Right drag: Pan • Scroll: Zoom
+            </div>
+          </div>
+
+          {debugInfo && (
+            <div className="absolute bottom-4 left-4 bg-black/70 text-white px-3 py-2 rounded-xl text-xs font-mono backdrop-blur-sm">
+              {debugInfo}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
