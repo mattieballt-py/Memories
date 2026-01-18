@@ -44,8 +44,8 @@ export default function PlyViewer({
         viewerRef.current = viewer;
 
         // Set background color
-        if (viewer.renderer && viewer.renderer.scene) {
-          viewer.renderer.scene.background = new THREE.Color(backgroundColor);
+        if (viewer.scene) {
+          viewer.scene.background = new THREE.Color(backgroundColor);
         }
 
         // Mount viewer first
@@ -144,11 +144,11 @@ export default function PlyViewer({
       }
 
       // Add helpers if requested
-      if (internalShowHelpers && viewer.renderer && viewer.renderer.scene) {
+      if (internalShowHelpers && viewer.scene) {
         const axesHelper = new THREE.AxesHelper(5);
         const gridHelper = new THREE.GridHelper(10, 10, 0x444444, 0x222222);
-        viewer.renderer.scene.add(axesHelper);
-        viewer.renderer.scene.add(gridHelper);
+        viewer.scene.add(axesHelper);
+        viewer.scene.add(gridHelper);
       }
 
       setLoading(false);
