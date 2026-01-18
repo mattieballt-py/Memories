@@ -97,55 +97,63 @@ export default function PlyViewer({
       console.log('Got splat mesh:', splatMesh);
 
       if (splatMesh) {
-        const splatCount = splatMesh.getSplatCount();
-        console.log('Splat count:', splatCount);
+        try {
+          const splatCount = splatMesh.getSplatCount();
+          console.log('Splat count:', splatCount);
 
-        // Calculate bounding box using setFromObject
-        const boundingBox = new THREE.Box3().setFromObject(splatMesh);
+          // Calculate bounding box using setFromObject
+          const boundingBox = new THREE.Box3().setFromObject(splatMesh);
 
-        const size = new THREE.Vector3();
-        boundingBox.getSize(size);
+          const size = new THREE.Vector3();
+          boundingBox.getSize(size);
 
-        const center = new THREE.Vector3();
-        boundingBox.getCenter(center);
+          const center = new THREE.Vector3();
+          boundingBox.getCenter(center);
 
-        console.log('Bounding box:', {
-          min: boundingBox.min.toArray(),
-          max: boundingBox.max.toArray(),
-          size: size.toArray(),
-          center: center.toArray(),
-        });
+          console.log('Bounding box:', {
+            min: boundingBox.min.toArray(),
+            max: boundingBox.max.toArray(),
+            size: size.toArray(),
+            center: center.toArray(),
+          });
 
-        // Position camera based on bounding box
-        // If size is 0, use a default distance
-        const maxDim = Math.max(size.x, size.y, size.z) || 5;
-        const cameraDistance = maxDim * 2.5;
+          // Position camera based on bounding box
+          // If size is 0, use a default distance
+          const maxDim = Math.max(size.x, size.y, size.z) || 5;
+          const cameraDistance = maxDim * 2.5;
 
-        // Position camera directly in front (along Z axis) for frontal view
-        viewer.camera.position.set(
-          center.x,
-          center.y,
-          center.z + cameraDistance
-        );
-        viewer.camera.lookAt(center);
-        viewer.controls.target.copy(center);
+          // Position camera directly in front (along Z axis) for frontal view
+          viewer.camera.position.set(
+            center.x,
+            center.y,
+            center.z + cameraDistance
+          );
+          viewer.camera.lookAt(center);
+          viewer.controls.target.copy(center);
 
-        // Enable full rotation
-        viewer.controls.enableRotate = true;
-        viewer.controls.enablePan = true;
-        viewer.controls.enableZoom = true;
-        viewer.controls.minPolarAngle = 0; // Allow full vertical rotation
-        viewer.controls.maxPolarAngle = Math.PI; // Allow full vertical rotation
+          // Enable full rotation
+          viewer.controls.enableRotate = true;
+          viewer.controls.enablePan = true;
+          viewer.controls.enableZoom = true;
+          viewer.controls.minPolarAngle = 0; // Allow full vertical rotation
+          viewer.controls.maxPolarAngle = Math.PI; // Allow full vertical rotation
 
-        viewer.controls.update();
+          viewer.controls.update();
 
-        console.log('Camera positioned at:', viewer.camera.position.toArray());
-        console.log('Looking at:', center.toArray());
+          console.log('Camera positioned at:', viewer.camera.position.toArray());
+          console.log('Looking at:', center.toArray());
 
-        setDebugInfo(
-          `Splats: ${splatCount.toLocaleString()} | ` +
-          `Size: ${size.x.toFixed(2)}×${size.y.toFixed(2)}×${size.z.toFixed(2)}`
-        );
+          setDebugInfo(
+            `Splats: ${splatCount.toLocaleString()} | ` +
+            `Size: ${size.x.toFixed(2)}×${size.y.toFixed(2)}×${size.z.toFixed(2)}`
+          );
+        } catch (err) {
+          console.error('Error getting splat info:', err);
+          setDebugInfo('Loaded successfully');
+        }
+      } else {
+        console.warn('No splat mesh found');
+        setDebugInfo('Loaded (mesh info unavailable)');
       }
 
       // Add helpers if requested
