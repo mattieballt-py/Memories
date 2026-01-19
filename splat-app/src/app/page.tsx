@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import PlyViewer from './components/PlyViewer';
+import Navbar from './components/Navbar';
 
 export default function Home() {
   const [plyUrl, setPlyUrl] = useState<string | null>(null);
@@ -61,7 +62,8 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-900 to-blue-900">
+    <main className="min-h-screen bg-cover bg-center bg-no-repeat" style={{ backgroundImage: 'url(/skyhero.jpg)' }}>
+      <Navbar />
       <div className="container mx-auto px-6 py-20">
         <h1 className="text-5xl font-bold text-white mb-8">
           Timeless Mind
