@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { put } from '@vercel/blob';
 
-// Use Edge Runtime for longer timeout (25s instead of 10s)
-export const runtime = 'edge';
+// Remove serverless timeout limits by not specifying runtime
+// This allows the request to take as long as needed
 
 export async function POST(request: NextRequest) {
   try {
