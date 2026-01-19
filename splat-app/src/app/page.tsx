@@ -17,114 +17,27 @@ export default function Home() {
     };
   }, [plyUrl]);
 
-  const compressImage = async (file: File, maxSizeMB = 5): Promise<File> => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      const reader = new FileReader();
-
-      reader.onload = (e) => {
-        img.src = e.target?.result as string;
-      };
-
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
-
-        // Scale down if image is too large (max 2048px on longest side)
-        const maxDimension = 2048;
-        if (width > maxDimension || height > maxDimension) {
-          if (width > height) {
-            height = (height / width) * maxDimension;
-            width = maxDimension;
-          } else {
-            width = (width / height) * maxDimension;
-            height = maxDimension;
-          }
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          reject(new Error('Failed to get canvas context'));
-          return;
-        }
-
-        ctx.drawImage(img, 0, 0, width, height);
-
-        // Try different quality levels to get under maxSizeMB
-        let quality = 0.9;
-        const tryCompress = () => {
-          canvas.toBlob(
-            (blob) => {
-              if (!blob) {
-                reject(new Error('Failed to compress image'));
-                return;
-              }
-
-              const sizeMB = blob.size / (1024 * 1024);
-
-              // If still too large and quality can be reduced, try again
-              if (sizeMB > maxSizeMB && quality > 0.3) {
-                quality -= 0.1;
-                tryCompress();
-              } else {
-                // Create a new File from the blob
-                const compressedFile = new File([blob], file.name, {
-                  type: 'image/jpeg',
-                  lastModified: Date.now(),
-                });
-                console.log(`Compressed image: ${(file.size / 1024 / 1024).toFixed(2)}MB -> ${sizeMB.toFixed(2)}MB`);
-                resolve(compressedFile);
-              }
-            },
-            'image/jpeg',
-            quality
-          );
-        };
-
-        tryCompress();
-      };
-
-      img.onerror = () => reject(new Error('Failed to load image'));
-      reader.onerror = () => reject(new Error('Failed to read file'));
-      reader.readAsDataURL(file);
-    });
-  };
-
   const handleUpload = async (file: File) => {
     setUploading(true);
     setError(null);
 
     try {
-      // Compress image if it's larger than 5MB
-      let processedFile = file;
-      const fileSizeMB = file.size / (1024 * 1024);
-
-      if (fileSizeMB > 5) {
-        console.log('Compressing large image...');
-        processedFile = await compressImage(file, 5);
-      }
-
       const formData = new FormData();
-      formData.append('file', processedFile);
+      formData.append('file', file);
 
-      console.log('Uploading file:', (processedFile.size / 1024 / 1024).toFixed(2), 'MB');
-
-      // Use API route which runs as Edge Function (25s timeout)
       const response = await fetch('/api/create-splat', {
         method: 'POST',
         body: formData,
       });
 
       if (!response.ok) {
+        // Try to get detailed error message from response
         const errorData = await response.json().catch(() => null);
         const errorMessage = errorData?.error || response.statusText;
         throw new Error(`Upload failed: ${errorMessage}`);
       }
 
+      // API now returns JSON with ply_url (uploaded to Vercel Blob)
       const data = await response.json();
 
       if (data.error) {
@@ -138,7 +51,7 @@ export default function Home() {
       console.log('Received PLY URL:', data.ply_url);
       console.log('PLY size:', data.size, 'bytes');
 
-      // Set the public URL (from Vercel Blob)
+      // Set the public HTTP URL directly - no blob URL needed!
       setPlyUrl(data.ply_url);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed');
