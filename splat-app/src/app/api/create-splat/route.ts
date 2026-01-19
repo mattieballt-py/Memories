@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { put } from '@vercel/blob';
 
-// Remove serverless timeout limits by not specifying runtime
-// This allows the request to take as long as needed
-
 export async function POST(request: NextRequest) {
   try {
     // Get uploaded image from frontend
