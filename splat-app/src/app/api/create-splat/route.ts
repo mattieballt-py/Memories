@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { put } from '@vercel/blob';
 
+// Use Edge Runtime for longer timeout (25s instead of 10s)
+export const runtime = 'edge';
+
 export async function POST(request: NextRequest) {
   try {
     // Get uploaded image from frontend
