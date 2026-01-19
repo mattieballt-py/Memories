@@ -62,72 +62,104 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-cover bg-center bg-no-repeat" style={{ backgroundImage: 'url(/skyhero.jpg)' }}>
-      <Navbar />
-      <div className="container mx-auto px-6 py-20">
-        <h1 className="text-5xl font-bold text-white mb-8">
-          Timeless Mind
-        </h1>
-        <p className="text-white text-lg mb-8"> Capture Your World </p>
+    <main className="relative min-h-screen">
+      {/* Background Image */}
+      <div
+        className="absolute inset-0 z-0"
+        style={{
+          backgroundImage: "url('/skyhero.jpg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      />
 
-        {!plyUrl ? (
-          <div className="max-w-md mx-auto">
-            <div className="bg-white/10 backdrop-blur-sm p-8 rounded-2xl">
-              <label className="block mb-4">
-                <span className="text-white text-lg mb-2 block">Upload an image</span>
+      <Navbar />
+
+      {!plyUrl ? (
+        <section className="relative min-h-screen flex flex-col items-center justify-center pt-16">
+          {/* Content */}
+          <div className="relative z-10 text-center px-4 max-w-2xl mx-auto">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white tracking-wider uppercase mb-2">
+              Timeless Mind
+            </h1>
+            <p className="text-white/90 text-lg md:text-xl mb-8">
+              Your World: <em>immortalised</em>
+            </p>
+
+            {/* Upload Box */}
+            <div className="bg-[#4a6a76]/80 backdrop-blur-sm rounded-lg p-6 md:p-8 max-w-md mx-auto">
+              <label className="block cursor-pointer">
+                <div className="w-full bg-[#7a9fac] hover:bg-[#8ab0bc] text-[#2a4a56] font-medium rounded-md py-2 px-4 mb-2 transition-colors flex items-center justify-center">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Upload an image
+                </div>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={(e) => e.target.files && handleUpload(e.target.files[0])}
-                  className="w-full p-4 bg-white rounded-xl text-lg cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white file:cursor-pointer hover:file:bg-blue-700"
+                  className="hidden"
                   disabled={uploading}
                 />
               </label>
+              <p className="text-white/80 text-sm">or drop photo here</p>
 
               {uploading && (
                 <div className="mt-4 text-center">
-                  <div className="text-white text-lg mb-2">Processing on GPU...</div>
-                  <div className="text-white/60">This may take 30-60 seconds</div>
+                  <div className="text-white text-base mb-2">Processing on GPU...</div>
+                  <div className="text-white/60 text-sm">This may take 30-60 seconds</div>
                   <div className="mt-4 w-full bg-white/20 rounded-full h-2">
-                    <div className="bg-blue-500 h-2 rounded-full animate-pulse w-full"></div>
+                    <div className="bg-[#7a9fac] h-2 rounded-full animate-pulse w-full"></div>
                   </div>
                 </div>
               )}
 
               {error && (
-                <div className="mt-4 p-4 bg-red-500/20 border border-red-500 rounded-xl text-red-200">
+                <div className="mt-4 p-4 bg-red-500/20 border border-red-500 rounded-lg text-red-200 text-sm">
                   {error}
                 </div>
               )}
             </div>
+
+            <p className="text-white/60 text-xs mt-4">
+              No ads, your 3D scene lives in a shareable link
+            </p>
           </div>
-        ) : (
-          <div>
-            <PlyViewer plyUrl={plyUrl} />
-            <div className="flex gap-4 justify-center mt-6">
-              <a
-                href={plyUrl}
-                download="output.ply"
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors"
-              >
-                Download PLY File
-              </a>
-              <button
-                onClick={() => {
-                  if (plyUrl && plyUrl.startsWith('blob:')) {
-                    URL.revokeObjectURL(plyUrl);
-                  }
-                  setPlyUrl(null);
-                  setError(null);
-                }}
-                className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-colors"
-              >
-                Upload Another Image
-              </button>
-            </div>
+
+          {/* Powered by text */}
+          <div className="absolute bottom-4 right-4 z-10">
+            <p className="text-white/60 text-xs">
+              {"Powered by Apple's SHARP Gaussian splat model."}
+            </p>
           </div>
-        )}
-      </div>
+        </section>
+      ) : (
+        <div className="relative z-10 container mx-auto px-6 py-20">
+          <PlyViewer plyUrl={plyUrl} />
+          <div className="flex gap-4 justify-center mt-6">
+            <a
+              href={plyUrl}
+              download="output.ply"
+              className="px-6 py-3 bg-[#7a9fac] hover:bg-[#8ab0bc] text-white rounded-xl transition-colors"
+            >
+              Download PLY File
+            </a>
+            <button
+              onClick={() => {
+                if (plyUrl && plyUrl.startsWith('blob:')) {
+                  URL.revokeObjectURL(plyUrl);
+                }
+                setPlyUrl(null);
+                setError(null);
+              }}
+              className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-colors"
+            >
+              Upload Another Image
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

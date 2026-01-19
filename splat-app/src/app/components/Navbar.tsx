@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
-export function Navbar() {
+export default function Navbar() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-[#3a5a66]/90 backdrop-blur-sm">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
@@ -17,9 +17,9 @@ export function Navbar() {
           <Link href="#docs" className="text-sm text-white/90 hover:text-white transition-colors">
             docs
           </Link>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             className="border-white/50 text-white hover:bg-white/10 rounded-full text-xs px-4 bg-transparent"
           >
             create 3D scene
