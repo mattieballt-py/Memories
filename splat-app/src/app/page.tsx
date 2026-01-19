@@ -25,34 +25,31 @@ export default function Home() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch('/api/create-splat', {
+      // Call Modal API directly from client to avoid Vercel timeout
+      const modalApiUrl = 'https://mattieballt-py--sharp-api-fastapi-app.modal.run/predict/ply';
+
+      console.log('Calling Modal API directly:', modalApiUrl);
+
+      const response = await fetch(modalApiUrl, {
         method: 'POST',
         body: formData,
       });
 
       if (!response.ok) {
-        // Try to get detailed error message from response
-        const errorData = await response.json().catch(() => null);
-        const errorMessage = errorData?.error || response.statusText;
-        throw new Error(`Upload failed: ${errorMessage}`);
+        throw new Error(`Processing failed: ${response.statusText}`);
       }
 
-      // API now returns JSON with ply_url (uploaded to Vercel Blob)
-      const data = await response.json();
+      // Modal returns binary PLY file data
+      const plyBlob = await response.blob();
 
-      if (data.error) {
-        throw new Error(data.error);
-      }
+      console.log('Received PLY file:', {
+        size: plyBlob.size,
+        type: plyBlob.type,
+      });
 
-      if (!data.ply_url) {
-        throw new Error('No PLY URL returned from server');
-      }
-
-      console.log('Received PLY URL:', data.ply_url);
-      console.log('PLY size:', data.size, 'bytes');
-
-      // Set the public HTTP URL directly - no blob URL needed!
-      setPlyUrl(data.ply_url);
+      // Create a blob URL for local viewing
+      const blobUrl = URL.createObjectURL(plyBlob);
+      setPlyUrl(blobUrl);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed');
       console.error('Upload error:', err);
