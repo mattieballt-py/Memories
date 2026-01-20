@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import PlyViewer from './components/PlyViewer';
 import Navbar from './components/Navbar';
+import how-to-capture from './components/how-to-capture';
 
 export default function Home() {
   const [plyUrl, setPlyUrl] = useState<string | null>(null);
@@ -159,6 +160,7 @@ export default function Home() {
             </button>
           </div>
         </div>
+      < how-to-capture />
       )}
     </main>
   );
