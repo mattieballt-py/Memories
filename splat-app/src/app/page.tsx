@@ -66,21 +66,18 @@ export default function Home() {
   };
 
   return (
-    <main className="relative min-h-screen">
-      {/* Background Image */}
-      <div
-        className="absolute inset-0 z-0"
-        style={{
-          backgroundImage: "url('/skyhero.jpg')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      />
-
+    <main className="relative">
       <Navbar />
 
       {!plyUrl ? (
-        <section className="relative min-h-screen flex flex-col items-center justify-center pt-16">
+        <section
+          className="relative min-h-screen flex flex-col items-center justify-center pt-16"
+          style={{
+            backgroundImage: "url('/skyhero.jpg')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
           {/* Content */}
           <div className="relative z-10 text-center px-4 max-w-2xl mx-auto">
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white tracking-wider uppercase mb-2">
