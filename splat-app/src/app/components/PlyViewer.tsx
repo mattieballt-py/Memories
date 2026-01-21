@@ -21,6 +21,7 @@ export default function PlyViewer({
   const [debugInfo, setDebugInfo] = useState<string>('');
   const [internalShowHelpers, setInternalShowHelpers] = useState(showHelpers);
   const viewerRef = useRef<GaussianSplatViewer | null>(null);
+  const helpersRef = useRef<{ axes: THREE.AxesHelper; grid: THREE.GridHelper } | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -117,15 +118,15 @@ export default function PlyViewer({
             center: center.toArray(),
           });
 
-          // Position camera based on bounding box
-          // If size is 0, use a default distance
+          // Position camera to match the original photo's viewpoint
+          // The splat is created from a frontal photo, so camera should be at Z+ looking at center
           const maxDim = Math.max(size.x, size.y, size.z) || 5;
-          const cameraDistance = maxDim * 2.5;
+          const cameraDistance = maxDim * 1.5; // Closer view to match original photo
 
-          // Position camera directly in front (along Z axis) for frontal view
+          // Position camera at the photo's viewpoint (frontal, slightly above center)
           viewer.camera.position.set(
             center.x,
-            center.y,
+            center.y, // Keep at center height
             center.z + cameraDistance
           );
           viewer.camera.lookAt(center);
@@ -162,6 +163,7 @@ export default function PlyViewer({
         const gridHelper = new THREE.GridHelper(10, 10, 0x444444, 0x222222);
         viewer.scene.add(axesHelper);
         viewer.scene.add(gridHelper);
+        helpersRef.current = { axes: axesHelper, grid: gridHelper };
       }
 
       setLoading(false);
@@ -198,6 +200,33 @@ export default function PlyViewer({
       }
     };
   }, [plyUrl, backgroundColor, internalShowHelpers]);
+
+  // Separate effect to handle helpers toggle
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!viewer || !viewer.scene) return;
+
+    if (internalShowHelpers) {
+      // Add helpers if they don't exist
+      if (!helpersRef.current) {
+        const axesHelper = new THREE.AxesHelper(5);
+        const gridHelper = new THREE.GridHelper(10, 10, 0x444444, 0x222222);
+        viewer.scene.add(axesHelper);
+        viewer.scene.add(gridHelper);
+        helpersRef.current = { axes: axesHelper, grid: gridHelper };
+      } else {
+        // Re-add existing helpers
+        viewer.scene.add(helpersRef.current.axes);
+        viewer.scene.add(helpersRef.current.grid);
+      }
+    } else {
+      // Remove helpers but keep reference
+      if (helpersRef.current) {
+        viewer.scene.remove(helpersRef.current.axes);
+        viewer.scene.remove(helpersRef.current.grid);
+      }
+    }
+  }, [internalShowHelpers]);
 
   return (
     <div className="relative w-full h-[600px] rounded-2xl overflow-hidden bg-black mx-auto max-w-4xl">

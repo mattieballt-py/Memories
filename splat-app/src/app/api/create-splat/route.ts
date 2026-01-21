@@ -3,6 +3,19 @@ import { put } from '@vercel/blob';
 
 export async function POST(request: NextRequest) {
   try {
+    // Check usage limit before processing
+    const usageCheck = await fetch(new URL('/api/usage', request.url), {
+      method: 'POST',
+    });
+
+    if (!usageCheck.ok) {
+      const errorData = await usageCheck.json();
+      return NextResponse.json(
+        { error: errorData.message || 'Usage limit reached' },
+        { status: 429 }
+      );
+    }
+
     // Get uploaded image from frontend
     const formData = await request.formData();
     const file = formData.get('file') as File;
