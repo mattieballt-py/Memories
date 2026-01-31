@@ -37,10 +37,11 @@ export default function PlyViewer({
     const initViewer = async () => {
       try {
         // Create Gaussian Splat viewer
+        // SHARP model creates splats where camera is at origin looking forward (+Z)
         viewer = new GaussianSplatViewer({
-          cameraUp: [0, -1, 0],  // Flip up vector for correct orientation
-          initialCameraPosition: [0, 0, 5],
-          initialCameraLookAt: [0, 0, 0],
+          cameraUp: [0, 1, 0],  // Standard up vector (Y-up)
+          initialCameraPosition: [0, 0, 0],  // Start at origin (where photo was taken)
+          initialCameraLookAt: [0, 0, 1],    // Look forward into the scene
           sharedMemoryForWorkers: false,
         });
 
@@ -120,26 +121,32 @@ export default function PlyViewer({
             center: center.toArray(),
           });
 
-          // Position camera to match the original photo's viewpoint
-          // The splat is created from a frontal photo, so position camera to view from front
+          // SHARP model positions camera at origin looking at scene
+          // Calculate appropriate distance to fit entire scene in view
           const maxDim = Math.max(size.x, size.y, size.z) || 5;
-          const cameraDistance = maxDim * 2.0; // Appropriate distance for full view
 
-          // Position camera in FRONT of the scene (negative Z for frontal view)
-          // This matches how the photo was taken - facing the subject
+          // Position camera at origin (where photo was taken) but pulled back slightly
+          // to ensure the entire reconstructed scene fits in view
+          const cameraDistance = maxDim * 0.8; // Distance from origin
+
+          // Camera at origin looking at scene center
+          // The scene extends forward from origin in SHARP model
           const camPos = new THREE.Vector3(
-            center.x,
-            center.y,
-            center.z - cameraDistance // Negative Z = camera in front looking back
+            0,  // X: centered
+            0,  // Y: at eye level
+            -cameraDistance  // Z: back from origin to see full scene
           );
 
+          // Look at the center of the reconstructed scene
+          const lookAtTarget = new THREE.Vector3(center.x, center.y, center.z);
+
           viewer.camera.position.copy(camPos);
-          viewer.camera.lookAt(center);
-          viewer.controls.target.copy(center);
+          viewer.camera.lookAt(lookAtTarget);
+          viewer.controls.target.copy(lookAtTarget);
 
           // Save initial camera state for home button
           initialCameraPosition.current = camPos.clone();
-          initialCameraTarget.current = center.clone();
+          initialCameraTarget.current = lookAtTarget.clone();
 
           // Enable full rotation
           viewer.controls.enableRotate = true;

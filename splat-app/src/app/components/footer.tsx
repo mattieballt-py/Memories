@@ -83,7 +83,7 @@ export function Footer() {
             <ul className="space-y-2">
               <li>
                 <a
-                  href="https://instagram.com/mattieballl"
+                  href="https://www.instagram.com/mattieball.co/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-white/70 hover:text-white text-sm transition-colors flex items-center gap-2"
@@ -109,7 +109,7 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="https://linkedin.com/in/mattieballl"
+                  href="https://www.linkedin.com/in/mattieballt/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-white/70 hover:text-white text-sm transition-colors flex items-center gap-2"
@@ -124,7 +124,7 @@ export function Footer() {
             <p className="text-white/60 text-xs mt-4 leading-relaxed">
               Articles on web design by{" "}
               <a
-                href="https://fibonaccihq.com"
+                href="https://www.fibonaccihq.com/insights"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white/80 hover:text-white underline"
