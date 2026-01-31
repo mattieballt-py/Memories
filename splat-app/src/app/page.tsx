@@ -73,7 +73,9 @@ export default function Home() {
         <section
           className="relative min-h-screen flex flex-col items-center justify-center pt-16"
           style={{
-            backgroundColor: "#618497",
+            backgroundImage: "url('/skyhero.jpg')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
           }}
         >
           {/* Content */}

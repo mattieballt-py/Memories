@@ -22,6 +22,8 @@ export default function PlyViewer({
   const [internalShowHelpers, setInternalShowHelpers] = useState(showHelpers);
   const viewerRef = useRef<GaussianSplatViewer | null>(null);
   const helpersRef = useRef<{ axes: THREE.AxesHelper; grid: THREE.GridHelper } | null>(null);
+  const initialCameraPosition = useRef<THREE.Vector3 | null>(null);
+  const initialCameraTarget = useRef<THREE.Vector3 | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -119,18 +121,25 @@ export default function PlyViewer({
           });
 
           // Position camera to match the original photo's viewpoint
-          // The splat is created from a frontal photo, so camera should be at Z+ looking at center
+          // The splat is created from a frontal photo, so position camera to view from front
           const maxDim = Math.max(size.x, size.y, size.z) || 5;
-          const cameraDistance = maxDim * 1.5; // Closer view to match original photo
+          const cameraDistance = maxDim * 2.0; // Appropriate distance for full view
 
-          // Position camera at the photo's viewpoint (frontal, slightly above center)
-          viewer.camera.position.set(
+          // Position camera in FRONT of the scene (negative Z for frontal view)
+          // This matches how the photo was taken - facing the subject
+          const camPos = new THREE.Vector3(
             center.x,
-            center.y, // Keep at center height
-            center.z + cameraDistance
+            center.y,
+            center.z - cameraDistance // Negative Z = camera in front looking back
           );
+
+          viewer.camera.position.copy(camPos);
           viewer.camera.lookAt(center);
           viewer.controls.target.copy(center);
+
+          // Save initial camera state for home button
+          initialCameraPosition.current = camPos.clone();
+          initialCameraTarget.current = center.clone();
 
           // Enable full rotation
           viewer.controls.enableRotate = true;
@@ -228,6 +237,18 @@ export default function PlyViewer({
     }
   }, [internalShowHelpers]);
 
+  // Function to reset camera to initial position
+  const resetCamera = () => {
+    const viewer = viewerRef.current;
+    if (!viewer || !initialCameraPosition.current || !initialCameraTarget.current) return;
+
+    // Smoothly animate back to initial position
+    viewer.camera.position.copy(initialCameraPosition.current);
+    viewer.camera.lookAt(initialCameraTarget.current);
+    viewer.controls.target.copy(initialCameraTarget.current);
+    viewer.controls.update();
+  };
+
   return (
     <div className="relative w-full h-[600px] rounded-2xl overflow-hidden bg-black mx-auto max-w-4xl">
       <div ref={containerRef} className="w-full h-full" />
@@ -259,13 +280,22 @@ export default function PlyViewer({
             </div>
           )}
 
-          <button
-            onClick={() => setInternalShowHelpers(!internalShowHelpers)}
-            className="absolute top-4 left-4 bg-black/70 hover:bg-black/80 text-white px-3 py-2 rounded-xl text-xs backdrop-blur-sm transition-colors z-10"
-            title="Toggle axes and grid helpers"
-          >
-            {internalShowHelpers ? '🔍 Hide Helpers' : '🔍 Show Helpers'}
-          </button>
+          <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
+            <button
+              onClick={() => setInternalShowHelpers(!internalShowHelpers)}
+              className="bg-black/70 hover:bg-black/80 text-white px-3 py-2 rounded-xl text-xs backdrop-blur-sm transition-colors"
+              title="Toggle axes and grid helpers"
+            >
+              {internalShowHelpers ? '🔍 Hide Helpers' : '🔍 Show Helpers'}
+            </button>
+            <button
+              onClick={resetCamera}
+              className="bg-black/70 hover:bg-black/80 text-white px-3 py-2 rounded-xl text-xs backdrop-blur-sm transition-colors"
+              title="Reset camera to initial position"
+            >
+              🏠 Home View
+            </button>
+          </div>
         </>
       )}
     </div>
