@@ -1,7 +1,7 @@
 export function Pricing() {
   return (
-    <section className="bg-[#5a7f8c] py-16 md:py-24 px-4">
-      <div className="container mx-auto max-w-5xl text-center">
+    <section className="bg-[#759AAD] py-16 md:py-24 px-4">
+      <div className="container mx-auto max-w-5xl text-center h-[60dvh]">
         <h2 className="text-2xl md:text-3xl font-bold text-white uppercase tracking-wider mb-2">
           Transparent Pricing
         </h2>

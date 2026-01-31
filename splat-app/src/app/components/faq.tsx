@@ -28,7 +28,7 @@ const faqItems = [
 
 export function FAQ() {
   return (
-    <section className="bg-[#5a7f8c] py-16 md:py-24 px-4">
+    <section className="bg-[#759AAD] py-16 md:py-24 px-4">
       <div className="container mx-auto max-w-3xl">
         <h2 className="text-2xl md:text-3xl font-bold text-white uppercase tracking-wider mb-2">
           Timeless Mind FAQ
