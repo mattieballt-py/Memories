@@ -24,6 +24,10 @@ const faqItems = [
     question: "Is my data secure?",
     answer: "Your privacy is important to us. Images are processed securely and your 3D scenes are only accessible via your unique links. No ads, no tracking.",
   },
+  {
+    question: "Who made this masterpiece?",
+    answer: "Made for fun, as a test of current gaussian splat capabilities, Mattie Ball made this with the support and development from early users. Thank you!",
+  },
 ]
 
 export function FAQ() {

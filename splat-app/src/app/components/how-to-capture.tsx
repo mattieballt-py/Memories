@@ -1,23 +1,21 @@
-import { ImagePlus, Orbit, Share2 } from "lucide-react"
-
 const steps = [
   {
     number: 1,
     title: "Upload an image",
     description: "Upload a single image of a place, object, or moment.",
-    icon: ImagePlus,
+    image: "/uploadsplat.png",
   },
   {
     number: 2,
     title: "Explore your scene",
     description: "Gaussian splat model created to reconstruct your scene in 3D.",
-    icon: Orbit,
+    image: "/viewsplat.png",
   },
   {
     number: 3,
     title: "Share your world",
     description: "You receive an interactive link you can orbit, zoom, and send to anyone.",
-    icon: Share2,
+    image: "/sharesplat.jpg",
   },
 ]
 
@@ -35,11 +33,15 @@ export function HowToCapture() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
           {steps.map((step) => (
             <div key={step.number} className="flex flex-col">
-              {/* Placeholder Card */}
-              <div className="bg-[#7a9fac] rounded-lg aspect-[4/3] mb-4 flex items-center justify-center">
-                <step.icon className="w-12 h-12 text-white/40" />
+              {/* Image Card */}
+              <div className="rounded-lg aspect-[4/3] mb-4 overflow-hidden">
+                <img
+                  src={step.image}
+                  alt={step.title}
+                  className="w-full h-full object-cover"
+                />
               </div>
-              
+
               {/* Step Info */}
               <div className="flex items-start gap-2">
                 <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white/50 text-[#759AAD] text-sm font-bold shrink-0 mt-0.5">
