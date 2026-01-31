@@ -19,11 +19,10 @@ export default function PlyViewer({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<string>('');
-  const [internalShowHelpers, setInternalShowHelpers] = useState(showHelpers);
   const viewerRef = useRef<GaussianSplatViewer | null>(null);
-  const helpersRef = useRef<{ axes: THREE.AxesHelper; grid: THREE.GridHelper } | null>(null);
   const initialCameraPosition = useRef<THREE.Vector3 | null>(null);
   const initialCameraTarget = useRef<THREE.Vector3 | null>(null);
+  const keysPressed = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -148,12 +147,13 @@ export default function PlyViewer({
           initialCameraPosition.current = camPos.clone();
           initialCameraTarget.current = lookAtTarget.clone();
 
-          // Enable full rotation
+          // Enable full rotation - no limits
           viewer.controls.enableRotate = true;
           viewer.controls.enablePan = true;
           viewer.controls.enableZoom = true;
-          viewer.controls.minPolarAngle = 0; // Allow full vertical rotation
-          viewer.controls.maxPolarAngle = Math.PI; // Allow full vertical rotation
+          // Remove polar angle limits to allow complete 360° rotation
+          viewer.controls.minPolarAngle = -Infinity;
+          viewer.controls.maxPolarAngle = Infinity;
 
           viewer.controls.update();
 
@@ -171,15 +171,6 @@ export default function PlyViewer({
       } else {
         console.warn('No splat mesh found');
         setDebugInfo('Loaded (mesh info unavailable)');
-      }
-
-      // Add helpers if requested
-      if (internalShowHelpers && viewer.scene) {
-        const axesHelper = new THREE.AxesHelper(5);
-        const gridHelper = new THREE.GridHelper(10, 10, 0x444444, 0x222222);
-        viewer.scene.add(axesHelper);
-        viewer.scene.add(gridHelper);
-        helpersRef.current = { axes: axesHelper, grid: gridHelper };
       }
 
       setLoading(false);
@@ -215,46 +206,97 @@ export default function PlyViewer({
         }
       }
     };
-  }, [plyUrl, backgroundColor, internalShowHelpers]);
-
-  // Separate effect to handle helpers toggle
-  useEffect(() => {
-    const viewer = viewerRef.current;
-    if (!viewer || !viewer.scene) return;
-
-    if (internalShowHelpers) {
-      // Add helpers if they don't exist
-      if (!helpersRef.current) {
-        const axesHelper = new THREE.AxesHelper(5);
-        const gridHelper = new THREE.GridHelper(10, 10, 0x444444, 0x222222);
-        viewer.scene.add(axesHelper);
-        viewer.scene.add(gridHelper);
-        helpersRef.current = { axes: axesHelper, grid: gridHelper };
-      } else {
-        // Re-add existing helpers
-        viewer.scene.add(helpersRef.current.axes);
-        viewer.scene.add(helpersRef.current.grid);
-      }
-    } else {
-      // Remove helpers but keep reference
-      if (helpersRef.current) {
-        viewer.scene.remove(helpersRef.current.axes);
-        viewer.scene.remove(helpersRef.current.grid);
-      }
-    }
-  }, [internalShowHelpers]);
+  }, [plyUrl, backgroundColor]);
 
   // Function to reset camera to initial position
   const resetCamera = () => {
     const viewer = viewerRef.current;
     if (!viewer || !initialCameraPosition.current || !initialCameraTarget.current) return;
 
-    // Smoothly animate back to initial position
+    console.log('Resetting camera to:', initialCameraPosition.current.toArray());
+    console.log('Resetting target to:', initialCameraTarget.current.toArray());
+
+    // Reset camera position and target
     viewer.camera.position.copy(initialCameraPosition.current);
-    viewer.camera.lookAt(initialCameraTarget.current);
     viewer.controls.target.copy(initialCameraTarget.current);
+
+    // Update camera orientation
+    viewer.camera.lookAt(initialCameraTarget.current);
+    viewer.camera.updateProjectionMatrix();
+
+    // Force controls update
     viewer.controls.update();
   };
+
+  // WASD keyboard controls
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase();
+      if (['w', 'a', 's', 'd'].includes(key)) {
+        keysPressed.current.add(key);
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase();
+      keysPressed.current.delete(key);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
+
+  // Animation loop for WASD movement
+  useEffect(() => {
+    const viewer = viewerRef.current;
+    if (!viewer) return;
+
+    let animationId: number;
+    const moveSpeed = 0.1; // Units per frame
+
+    const animate = () => {
+      if (keysPressed.current.size > 0) {
+        const camera = viewer.camera;
+        const direction = new THREE.Vector3();
+        const right = new THREE.Vector3();
+
+        // Get camera direction and right vector
+        camera.getWorldDirection(direction);
+        right.crossVectors(camera.up, direction).normalize();
+
+        // Apply movement based on pressed keys (clone vectors before modifying)
+        if (keysPressed.current.has('w')) {
+          camera.position.add(direction.clone().multiplyScalar(moveSpeed));
+        }
+        if (keysPressed.current.has('s')) {
+          camera.position.add(direction.clone().multiplyScalar(-moveSpeed));
+        }
+        if (keysPressed.current.has('a')) {
+          camera.position.add(right.clone().multiplyScalar(moveSpeed));
+        }
+        if (keysPressed.current.has('d')) {
+          camera.position.add(right.clone().multiplyScalar(-moveSpeed));
+        }
+
+        viewer.controls.update();
+      }
+
+      animationId = requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    return () => {
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+    };
+  }, []);
 
   return (
     <div className="relative w-full h-[600px] rounded-2xl overflow-hidden bg-black mx-auto max-w-4xl">
@@ -277,7 +319,8 @@ export default function PlyViewer({
           <div className="absolute top-4 right-4 bg-black/70 text-white px-4 py-2 rounded-xl text-sm backdrop-blur-sm z-10">
             <div className="font-semibold mb-1">Controls:</div>
             <div className="text-xs opacity-80">
-              Left drag: Rotate • Right drag: Pan • Scroll: Zoom
+              Left drag: Rotate • Right drag: Pan • Scroll: Zoom<br />
+              WASD: Move camera
             </div>
           </div>
 
@@ -289,18 +332,11 @@ export default function PlyViewer({
 
           <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
             <button
-              onClick={() => setInternalShowHelpers(!internalShowHelpers)}
-              className="bg-black/70 hover:bg-black/80 text-white px-3 py-2 rounded-xl text-xs backdrop-blur-sm transition-colors"
-              title="Toggle axes and grid helpers"
-            >
-              {internalShowHelpers ? '🔍 Hide Helpers' : '🔍 Show Helpers'}
-            </button>
-            <button
               onClick={resetCamera}
               className="bg-black/70 hover:bg-black/80 text-white px-3 py-2 rounded-xl text-xs backdrop-blur-sm transition-colors"
               title="Reset camera to initial position"
             >
-              🏠 Home View
+              Home View
             </button>
           </div>
         </>
