@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Bayon } from "next/font/google";
 import "./globals.css";
+import Script from "next/script";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,6 +25,7 @@ export const metadata: Metadata = {
   description: "Transform a single photo into an interactive 3D Gaussian splat point cloud",
 };
 
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -30,6 +33,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* Google tag (gtag.js) */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-PB1WGHVZNE"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-PB1WGHVZNE');
+          `}
+        </Script>
+      </head>
+
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${bayon.variable} antialiased`}
       >
