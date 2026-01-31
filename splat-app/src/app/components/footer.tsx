@@ -96,7 +96,7 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="https://github.com/mattieballl"
+                  href="https://github.com/mattieballt-py"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-white/70 hover:text-white text-sm transition-colors flex items-center gap-2"
