@@ -23,13 +23,13 @@ const steps = [
 
 export function HowToCapture() {
   return (
-    <section className="bg-[#759AAD] py-16 md:py-24 px-4">
+    <section id="how-it-works" className="bg-[#759AAD] py-16 md:py-24 px-4">
       <div className="container mx-auto max-w-5xl">
         <h2 className="text-2xl md:text-3xl font-bold text-white uppercase tracking-wider mb-2">
           How to Capture Your World
         </h2>
         <p className="text-white/80 mb-10 md:mb-14">
-          One Image to 3D Scene in seconds
+          One Image to 3D Scene in under a second.
         </p>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
