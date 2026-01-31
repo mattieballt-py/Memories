@@ -1,18 +1,15 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Viewer as GaussianSplatViewer } from '@mkkellogg/gaussian-splats-3d';
 
 interface PlyViewerProps {
   plyUrl: string;
-  showHelpers?: boolean;  // Show axes/grid for debugging
   backgroundColor?: number;  // Allow custom background
 }
 
 export default function PlyViewer({
   plyUrl,
-  showHelpers = false,
   backgroundColor = 0x1a1a1a,
 }: PlyViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -38,7 +35,7 @@ export default function PlyViewer({
         // Create Gaussian Splat viewer
         // SHARP model creates splats where camera is at origin looking forward (+Z)
         viewer = new GaussianSplatViewer({
-          cameraUp: [0, 1, 0],  // Standard up vector (Y-up)
+          cameraUp: [0, -1, 0],  // Inverted up vector to flip view 180°
           initialCameraPosition: [0, 0, 0],  // Start at origin (where photo was taken)
           initialCameraLookAt: [0, 0, 1],    // Look forward into the scene
           sharedMemoryForWorkers: false,
@@ -211,21 +208,34 @@ export default function PlyViewer({
   // Function to reset camera to initial position
   const resetCamera = () => {
     const viewer = viewerRef.current;
-    if (!viewer || !initialCameraPosition.current || !initialCameraTarget.current) return;
+    if (!viewer || !initialCameraPosition.current || !initialCameraTarget.current) {
+      console.log('Cannot reset camera:', {
+        hasViewer: !!viewer,
+        hasPosition: !!initialCameraPosition.current,
+        hasTarget: !!initialCameraTarget.current
+      });
+      return;
+    }
 
     console.log('Resetting camera to:', initialCameraPosition.current.toArray());
     console.log('Resetting target to:', initialCameraTarget.current.toArray());
 
-    // Reset camera position and target
+    // Stop any ongoing WASD movement
+    keysPressed.current.clear();
+
+    // Reset camera position and controls target
     viewer.camera.position.copy(initialCameraPosition.current);
     viewer.controls.target.copy(initialCameraTarget.current);
 
-    // Update camera orientation
+    // Update camera matrix and projection
     viewer.camera.lookAt(initialCameraTarget.current);
+    viewer.camera.updateMatrixWorld(true);
     viewer.camera.updateProjectionMatrix();
 
-    // Force controls update
+    // Force controls to update with new position/target
     viewer.controls.update();
+
+    console.log('Camera reset complete. New position:', viewer.camera.position.toArray());
   };
 
   // WASD keyboard controls
@@ -253,14 +263,13 @@ export default function PlyViewer({
 
   // Animation loop for WASD movement
   useEffect(() => {
-    const viewer = viewerRef.current;
-    if (!viewer) return;
-
-    let animationId: number;
+    let animationId: number | null = null;
     const moveSpeed = 0.1; // Units per frame
 
     const animate = () => {
-      if (keysPressed.current.size > 0) {
+      const viewer = viewerRef.current;
+
+      if (viewer && keysPressed.current.size > 0) {
         const camera = viewer.camera;
         const direction = new THREE.Vector3();
         const right = new THREE.Vector3();
@@ -284,15 +293,27 @@ export default function PlyViewer({
         }
 
         viewer.controls.update();
-      }
 
-      animationId = requestAnimationFrame(animate);
+        // Continue animation loop only if keys are still pressed
+        animationId = requestAnimationFrame(animate);
+      } else {
+        // Stop animation loop when no keys are pressed
+        animationId = null;
+      }
     };
 
-    animate();
+    // Start animation only when a key is pressed
+    const handleKeyPress = () => {
+      if (animationId === null && keysPressed.current.size > 0) {
+        animate();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
 
     return () => {
-      if (animationId) {
+      window.removeEventListener('keydown', handleKeyPress);
+      if (animationId !== null) {
         cancelAnimationFrame(animationId);
       }
     };

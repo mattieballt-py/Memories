@@ -134,7 +134,7 @@ export default function Home() {
               {uploading && (
                 <div className="mt-4 text-center">
                   <div className="text-white text-base mb-2">Processing on GPU...</div>
-                  <div className="text-white/70 text-sm">This may take 30-60 seconds</div>
+                  <div className="text-white/70 text-sm">This may take more than 1 second</div>
                   <div className="mt-4 w-full bg-white/20 rounded-full h-2">
                     <div className="bg-white/60 h-2 rounded-full animate-pulse w-full"></div>
                   </div>
