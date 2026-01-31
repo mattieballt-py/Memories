@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import PlyViewer from '@/app/components/PlyViewer';
 import Navbar from '@/app/components/Navbar';
 import Link from 'next/link';
+import {Footer} from '@/app/components/footer';
 
 export default function ViewPage() {
   const params = useParams();
@@ -56,14 +57,6 @@ export default function ViewPage() {
           </div>
         ) : plyUrl ? (
           <>
-            <div className="text-center mb-6">
-              <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-                Shared 3D Scene
-              </h1>
-              <p className="text-white/80">
-                Explore this immersive Gaussian splat scene
-              </p>
-            </div>
 
             <PlyViewer plyUrl={plyUrl} />
 
@@ -71,13 +64,13 @@ export default function ViewPage() {
               <a
                 href={plyUrl}
                 download="scene.ply"
-                className="px-6 py-3 bg-white/25 backdrop-blur-md hover:bg-white/35 text-white rounded-2xl border border-white/40 transition-all duration-200 shadow-lg hover:shadow-xl font-medium text-center"
+                className="px-6 py-3 bg-white/15 backdrop-blur-md hover:bg-white/35 text-white rounded-2xl border border-white/40 transition-all duration-200 shadow-lg hover:shadow-xl font-medium text-center"
               >
                 Download PLY File
               </a>
               <Link
                 href="/"
-                className="px-6 py-3 bg-white/15 backdrop-blur-md hover:bg-white/25 text-white rounded-2xl border border-white/30 transition-all duration-200 shadow-lg hover:shadow-xl font-medium text-center"
+                className="px-6 py-3 bg-white/25 backdrop-blur-md hover:bg-white/25 text-white rounded-2xl border border-white/30 transition-all duration-200 shadow-lg hover:shadow-xl font-medium text-center"
               >
                 Create Your Own
               </Link>
@@ -89,6 +82,7 @@ export default function ViewPage() {
           </div>
         )}
       </div>
+      <Footer />
     </main>
   );
 }
