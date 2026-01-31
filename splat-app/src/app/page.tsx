@@ -114,22 +114,26 @@ export default function Home() {
 
             {/* Upload Box */}
             <div className="bg-white/15 backdrop-blur-xl rounded-3xl border border-white/30 shadow-2xl p-8 md:p-10 max-w-md mx-auto">
-              <label className="block cursor-pointer">
-                <div className="w-full bg-white/25 backdrop-blur-md hover:bg-white/35 text-white font-medium rounded-2xl py-3 px-6 mb-3 transition-all duration-200 flex items-center justify-center border border-white/40 shadow-lg hover:shadow-xl">
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  Upload an image
-                </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => e.target.files && handleUpload(e.target.files[0])}
-                  className="hidden"
-                  disabled={uploading}
-                />
-              </label>
-              <p className="text-white/80 text-sm">or drop photo here</p>
+              {!uploading && (
+                <>
+                  <label className="block cursor-pointer">
+                    <div className="w-full bg-white/25 backdrop-blur-md hover:bg-white/35 text-white font-medium rounded-2xl py-3 px-6 mb-3 transition-all duration-200 flex items-center justify-center border border-white/40 shadow-lg hover:shadow-xl">
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      Upload an image
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => e.target.files && handleUpload(e.target.files[0])}
+                      className="hidden"
+                      disabled={uploading}
+                    />
+                  </label>
+                  <p className="text-white/80 text-sm">or drop photo here</p>
+                </>
+              )}
 
               {uploading && (
                 <div className="mt-4 text-center">

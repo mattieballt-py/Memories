@@ -237,6 +237,39 @@ export default function PlyViewer({
     console.log('Camera reset complete. New position:', viewer.camera.position.toArray());
   };
 
+  // Function to rotate camera view 90 degrees clockwise
+  const rotateView90 = () => {
+    const viewer = viewerRef.current;
+    if (!viewer) return;
+
+    // Stop any ongoing WASD movement
+    keysPressed.current.clear();
+
+    // Get the view direction (from camera to target)
+    const viewDirection = new THREE.Vector3();
+    viewer.camera.getWorldDirection(viewDirection);
+
+    // Rotate the camera's up vector 90 degrees clockwise around the view direction
+    const rotationAxis = viewDirection.clone();
+    const rotationAngle = Math.PI / 2; // 90 degrees in radians
+
+    // Get current up vector and rotate it
+    const currentUp = viewer.camera.up.clone();
+    currentUp.applyAxisAngle(rotationAxis, rotationAngle);
+
+    // Update camera up vector
+    viewer.camera.up.copy(currentUp);
+
+    // Update camera matrix
+    viewer.camera.lookAt(viewer.controls.target);
+    viewer.camera.updateMatrixWorld(true);
+
+    // Force controls to update
+    viewer.controls.update();
+
+    console.log('Camera rotated 90° clockwise');
+  };
+
   // WASD keyboard controls
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -270,6 +303,7 @@ export default function PlyViewer({
 
       if (viewer && keysPressed.current.size > 0) {
         const camera = viewer.camera;
+        const movement = new THREE.Vector3();
         const direction = new THREE.Vector3();
         const right = new THREE.Vector3();
 
@@ -277,19 +311,23 @@ export default function PlyViewer({
         camera.getWorldDirection(direction);
         right.crossVectors(camera.up, direction).normalize();
 
-        // Apply movement based on pressed keys (clone vectors before modifying)
+        // Calculate movement vector based on pressed keys
         if (keysPressed.current.has('w')) {
-          camera.position.add(direction.clone().multiplyScalar(moveSpeed));
+          movement.add(direction.clone().multiplyScalar(moveSpeed));
         }
         if (keysPressed.current.has('s')) {
-          camera.position.add(direction.clone().multiplyScalar(-moveSpeed));
+          movement.add(direction.clone().multiplyScalar(-moveSpeed));
         }
         if (keysPressed.current.has('a')) {
-          camera.position.add(right.clone().multiplyScalar(moveSpeed));
+          movement.add(right.clone().multiplyScalar(moveSpeed));
         }
         if (keysPressed.current.has('d')) {
-          camera.position.add(right.clone().multiplyScalar(-moveSpeed));
+          movement.add(right.clone().multiplyScalar(-moveSpeed));
         }
+
+        // Move both camera and target together to maintain view direction
+        camera.position.add(movement);
+        viewer.controls.target.add(movement);
 
         viewer.controls.update();
 
@@ -357,6 +395,13 @@ export default function PlyViewer({
               title="Reset camera to initial position"
             >
               Home View
+            </button>
+            <button
+              onClick={rotateView90}
+              className="bg-black/70 hover:bg-black/80 text-white px-3 py-2 rounded-xl text-xs backdrop-blur-sm transition-colors"
+              title="Rotate view 90° clockwise"
+            >
+              Rotate 90°
             </button>
           </div>
         </>
