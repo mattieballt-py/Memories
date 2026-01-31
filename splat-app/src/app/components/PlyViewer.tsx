@@ -227,10 +227,9 @@ export default function PlyViewer({
     viewer.camera.position.copy(initialCameraPosition.current);
     viewer.controls.target.copy(initialCameraTarget.current);
 
-    // Update camera matrix and projection
+    // Update camera matrix
     viewer.camera.lookAt(initialCameraTarget.current);
     viewer.camera.updateMatrixWorld(true);
-    viewer.camera.updateProjectionMatrix();
 
     // Force controls to update with new position/target
     viewer.controls.update();

@@ -105,7 +105,7 @@ export default function Home() {
         >
           {/* Content */}
           <div className="relative z-10 text-center px-4 max-w-2xl mx-auto">
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white tracking-wider uppercase mb-2">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl tracking-tighter font-bold text-white tracking-wider uppercase mb-2">
               Timeless Mind
             </h1>
             <p className="text-white/90 text-lg md:text-xl mb-8">
