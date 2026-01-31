@@ -73,9 +73,7 @@ export default function Home() {
         <section
           className="relative min-h-screen flex flex-col items-center justify-center pt-16"
           style={{
-            backgroundImage: "url('/skyhero.jpg')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
+            backgroundColor: "#618497",
           }}
         >
           {/* Content */}
@@ -88,10 +86,10 @@ export default function Home() {
             </p>
 
             {/* Upload Box */}
-            <div className="bg-[#4a6a76]/80 backdrop-blur-sm rounded-lg p-6 md:p-8 max-w-md mx-auto">
+            <div className="bg-white/15 backdrop-blur-xl rounded-3xl border border-white/30 shadow-2xl p-8 md:p-10 max-w-md mx-auto">
               <label className="block cursor-pointer">
-                <div className="w-full bg-[#7a9fac] hover:bg-[#8ab0bc] text-[#2a4a56] font-medium rounded-md py-2 px-4 mb-2 transition-colors flex items-center justify-center">
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-full bg-white/25 backdrop-blur-md hover:bg-white/35 text-white font-medium rounded-2xl py-3 px-6 mb-3 transition-all duration-200 flex items-center justify-center border border-white/40 shadow-lg hover:shadow-xl">
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
                   Upload an image
@@ -109,9 +107,9 @@ export default function Home() {
               {uploading && (
                 <div className="mt-4 text-center">
                   <div className="text-white text-base mb-2">Processing on GPU...</div>
-                  <div className="text-white/60 text-sm">This may take 30-60 seconds</div>
+                  <div className="text-white/70 text-sm">This may take 30-60 seconds</div>
                   <div className="mt-4 w-full bg-white/20 rounded-full h-2">
-                    <div className="bg-[#7a9fac] h-2 rounded-full animate-pulse w-full"></div>
+                    <div className="bg-white/60 h-2 rounded-full animate-pulse w-full"></div>
                   </div>
                 </div>
               )}
