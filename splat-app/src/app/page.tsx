@@ -140,7 +140,7 @@ export default function Home() {
             <a
               href={plyUrl}
               download="output.ply"
-              className="px-6 py-3 bg-[#7a9fac] hover:bg-[#8ab0bc] text-white rounded-xl transition-colors"
+              className="px-6 py-3 bg-white/25 backdrop-blur-md hover:bg-white/35 text-white rounded-2xl border border-white/40 transition-all duration-200 shadow-lg hover:shadow-xl font-medium"
             >
               Download PLY File
             </a>
@@ -152,7 +152,7 @@ export default function Home() {
                 setPlyUrl(null);
                 setError(null);
               }}
-              className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-colors"
+              className="px-6 py-3 bg-white/15 backdrop-blur-md hover:bg-white/25 text-white rounded-2xl border border-white/30 transition-all duration-200 shadow-lg hover:shadow-xl font-medium"
             >
               Upload Another Image
             </button>
