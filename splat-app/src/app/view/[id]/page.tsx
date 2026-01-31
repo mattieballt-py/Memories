@@ -30,7 +30,14 @@ export default function ViewPage() {
   }, [params.id]);
 
   return (
-    <main className="relative min-h-screen bg-[#618497]">
+    <main
+      className="relative min-h-screen"
+      style={{
+        backgroundImage: "url('/skyhero.jpg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
       <Navbar />
 
       <div className="container mx-auto px-6 py-24">
