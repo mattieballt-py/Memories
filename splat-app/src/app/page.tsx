@@ -11,6 +11,8 @@ export default function Home() {
   const [plyUrl, setPlyUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [shareableLink, setShareableLink] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   // Cleanup blob URL when component unmounts or plyUrl changes
   useEffect(() => {
@@ -20,6 +22,29 @@ export default function Home() {
       }
     };
   }, [plyUrl]);
+
+  // Generate shareable link when plyUrl is set
+  useEffect(() => {
+    if (plyUrl && !plyUrl.startsWith('blob:')) {
+      // Encode the URL to base64 for the share link (URL-safe)
+      const encodedUrl = btoa(plyUrl).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+      const shareUrl = `${window.location.origin}/view/${encodedUrl}`;
+      setShareableLink(shareUrl);
+    }
+  }, [plyUrl]);
+
+  // Copy link to clipboard
+  const copyShareLink = async () => {
+    if (!shareableLink) return;
+
+    try {
+      await navigator.clipboard.writeText(shareableLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
 
   const handleUpload = async (file: File) => {
     setUploading(true);
@@ -138,14 +163,39 @@ export default function Home() {
       ) : (
         <div className="relative z-10 container mx-auto px-6 py-20">
           <PlyViewer plyUrl={plyUrl} />
-          <div className="flex gap-4 justify-center mt-6">
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-6">
+            {shareableLink && (
+              <button
+                onClick={copyShareLink}
+                className="px-6 py-3 bg-white/30 backdrop-blur-md hover:bg-white/40 text-white rounded-2xl border border-white/50 transition-all duration-200 shadow-lg hover:shadow-xl font-medium flex items-center justify-center gap-2"
+              >
+                {copied ? (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                    </svg>
+                    Copy Share Link
+                  </>
+                )}
+              </button>
+            )}
+
             <a
               href={plyUrl}
               download="output.ply"
-              className="px-6 py-3 bg-white/25 backdrop-blur-md hover:bg-white/35 text-white rounded-2xl border border-white/40 transition-all duration-200 shadow-lg hover:shadow-xl font-medium"
+              className="px-6 py-3 bg-white/25 backdrop-blur-md hover:bg-white/35 text-white rounded-2xl border border-white/40 transition-all duration-200 shadow-lg hover:shadow-xl font-medium text-center"
             >
               Download PLY File
             </a>
+
             <button
               onClick={() => {
                 if (plyUrl && plyUrl.startsWith('blob:')) {
@@ -153,6 +203,8 @@ export default function Home() {
                 }
                 setPlyUrl(null);
                 setError(null);
+                setShareableLink(null);
+                setCopied(false);
               }}
               className="px-6 py-3 bg-white/15 backdrop-blur-md hover:bg-white/25 text-white rounded-2xl border border-white/30 transition-all duration-200 shadow-lg hover:shadow-xl font-medium"
             >
