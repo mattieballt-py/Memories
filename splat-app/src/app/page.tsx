@@ -8,7 +8,7 @@ import { FAQ } from './components/faq';
 import { Footer } from './components/footer';
 
 // Counter logic
-const START_DATE = new Date('2025-01-01');
+const START_DATE = new Date('2025-08-02');
 const START_COUNT = 734;
 
 function getDailyIncrement(date: Date): number {
