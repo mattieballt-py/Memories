@@ -19,7 +19,7 @@ export default function HowToPage() {
     <main className="relative min-h-screen bg-gradient-to-b from-[#759AAD] to-[#5a7a8a]">
       <Navbar />
 
-      <article className="pt-24 pb-16 px-4">
+      <article className="pt-36 pb-16 px-4">
         <div className="container mx-auto max-w-4xl">
           {/* Hero Section */}
           <header className="text-center mb-12">
@@ -30,7 +30,7 @@ export default function HowToPage() {
               The Complete Guide to Creating Interactive 3D Gaussian Splat Scenes from a Single Image
             </p>
             <p className="text-white/70">
-              Transform any photo into an immersive 3D experience in under a second — completely free, no signup required.
+              Transform any photo into an immersive 3D experience in under a second. Completely free, no signup required. Not even selling your data.
             </p>
           </header>
 
@@ -50,42 +50,6 @@ export default function HowToPage() {
               </p>
             </section>
 
-            {/* Why Choose Photo to 3D Scene Technology */}
-            <section className="mb-10">
-              <h2 className="text-3xl font-bold text-white mb-6 border-b border-white/20 pb-2">
-                Why Choose Gaussian Splat from a Single Photo?
-              </h2>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="bg-white/5 rounded-lg p-5 border border-white/10">
-                  <h3 className="text-white font-semibold mb-2 flex items-center">
-                    <span className="text-2xl mr-2">⚡</span>
-                    Lightning Fast
-                  </h3>
-                  <p className="text-white/80">Generate 3D scenes in under 1 second — no waiting, no processing delays.</p>
-                </div>
-                <div className="bg-white/5 rounded-lg p-5 border border-white/10">
-                  <h3 className="text-white font-semibold mb-2 flex items-center">
-                    <span className="text-2xl mr-2">📸</span>
-                    One Photo Only
-                  </h3>
-                  <p className="text-white/80">No need for multiple angles or specialized cameras — just upload one image.</p>
-                </div>
-                <div className="bg-white/5 rounded-lg p-5 border border-white/10">
-                  <h3 className="text-white font-semibold mb-2 flex items-center">
-                    <span className="text-2xl mr-2">🔗</span>
-                    Instantly Shareable
-                  </h3>
-                  <p className="text-white/80">Get a unique link to share your 3D scene with anyone — works on any device.</p>
-                </div>
-                <div className="bg-white/5 rounded-lg p-5 border border-white/10">
-                  <h3 className="text-white font-semibold mb-2 flex items-center">
-                    <span className="text-2xl mr-2">🆓</span>
-                    Completely Free
-                  </h3>
-                  <p className="text-white/80">No hidden costs, subscriptions, or watermarks. Free forever, no signup needed.</p>
-                </div>
-              </div>
-            </section>
 
             {/* Step-by-Step Tutorial */}
             <section className="mb-10">
@@ -108,7 +72,7 @@ export default function HowToPage() {
                         people, or moments work beautifully.
                       </p>
                       <p className="text-white/70 text-sm italic">
-                        💡 <strong>Pro tip:</strong> Photos with clear depth and detail produce the most stunning 3D effects.
+                        <strong>Pro tip:</strong> Photos with clear depth and detail produce the most stunning 3D effects.
                       </p>
                     </div>
                   </div>
@@ -128,7 +92,7 @@ export default function HowToPage() {
                         automatically — no manual adjustments needed.
                       </p>
                       <p className="text-white/70 text-sm italic">
-                        💡 <strong>Behind the scenes:</strong> Advanced neural networks predict depth and spatial relationships
+                       <strong>Behind the scenes:</strong> Advanced neural networks predict depth and spatial relationships
                         to create realistic 3D geometry.
                       </p>
                     </div>
@@ -169,7 +133,7 @@ export default function HowToPage() {
                         in any web browser.
                       </p>
                       <p className="text-white/70 text-sm italic">
-                        💡 <strong>Privacy note:</strong> Your scenes are hosted securely. Only people with the link can access them.
+                        <strong>Privacy note:</strong> Your scenes are hosted securely. Only people with the link can access them.
                       </p>
                     </div>
                   </div>
@@ -178,7 +142,7 @@ export default function HowToPage() {
 
               <div className="mt-8 bg-[#4a6a76]/40 border-l-4 border-white/50 p-6 rounded-r-lg">
                 <p className="text-white/90 text-lg font-medium">
-                  🎉 <strong>That's it!</strong> You've just created your first <strong>photo to 3D scene</strong> using
+                  <strong>That's it!</strong> You've just created your first <strong>photo to 3D scene</strong> using
                   gaussian splat technology. No complex software, no 3D modeling experience needed.
                 </p>
               </div>
@@ -325,9 +289,7 @@ export default function HowToPage() {
               >
                 Start Creating Free →
               </Link>
-              <p className="text-white/60 text-sm mt-4">
-                No signup required • Takes less than 1 second • Completely free
-              </p>
+             
             </section>
 
           </div>
