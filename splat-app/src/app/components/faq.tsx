@@ -40,18 +40,18 @@ export function FAQ() {
         <p className="text-white/80 mb-10">
           Everything you need to know for sharing your world.
         </p>
-        
-        <Accordion type="single" collapsible className="space-y-3">
+
+        <Accordion type="single" collapsible className="space-y-4">
           {faqItems.map((item, index) => (
-            <AccordionItem 
-              key={index} 
+            <AccordionItem
+              key={index}
               value={`item-${index}`}
-              className="bg-[#4a6a76]/50 rounded-lg border-none px-4"
+              className="bg-white/20 backdrop-blur-xl rounded-2xl border border-white/30 shadow-lg px-6 overflow-hidden"
             >
-              <AccordionTrigger className="text-white hover:text-white/90 hover:no-underline py-4 text-left">
+              <AccordionTrigger className="text-white/95 hover:text-white hover:no-underline py-5 text-left font-medium">
                 {item.question}
               </AccordionTrigger>
-              <AccordionContent className="text-white/70 pb-4">
+              <AccordionContent className="text-white/80 pb-5 pt-1 leading-relaxed">
                 {item.answer}
               </AccordionContent>
             </AccordionItem>
