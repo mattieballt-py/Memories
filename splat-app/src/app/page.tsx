@@ -127,18 +127,19 @@ export default function Home() {
   };
 
   return (
-    <main className="relative">
+    <main
+      className="relative min-h-screen"
+      style={{
+        backgroundImage: "url('/skyhero.jpg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+      }}
+    >
       <Navbar />
 
       {!plyUrl ? (
-        <section
-          className="relative min-h-screen flex flex-col items-center justify-center pt-16"
-          style={{
-            backgroundImage: "url('/skyhero.jpg')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        >
+        <section className="relative min-h-screen flex flex-col items-center justify-center pt-16">
           {/* Content */}
           <div className="relative z-10 text-center px-4 max-w-2xl mx-auto">
             <h1 className="text-4xl md:text-6xl lg:text-7xl tracking-tighter font-bold text-white tracking-wider uppercase mb-2">
@@ -207,8 +208,10 @@ export default function Home() {
           </div>
         </section>
       ) : (
-        <div className="relative z-10 container mx-auto px-6 py-20">
-          <PlyViewer plyUrl={plyUrl} />
+        <section className="relative min-h-screen pt-24 pb-16 px-6">
+          <div className="container mx-auto">
+            <PlyViewer plyUrl={plyUrl} />
+          </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-6">
             {shareableLink && (
@@ -257,7 +260,7 @@ export default function Home() {
               Upload Another Image
             </button>
           </div>
-        </div>
+        </section>
       )}
 
       {/* Additional sections - always visible */}
