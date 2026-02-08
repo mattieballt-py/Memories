@@ -198,8 +198,8 @@ export default function Home() {
 
           {/* Bottom right section */}
           <div className="absolute bottom-4 right-4 z-10 text-right">
-            <p className="text-white/90 text-sm font-medium mb-1">
-              {count.toLocaleString()} <span className="text-white/50">memories recreated</span>
+            <p className="text-white/60 text-sm font-medium mb-1">
+              {count.toLocaleString()} <span className="text-white">memories recreated</span>
             </p>
             <p className="text-white/60 text-xs">
               {"Powered by Apple's SHARP Gaussian splat model."}
