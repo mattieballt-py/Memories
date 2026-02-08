@@ -7,12 +7,48 @@ import { Pricing } from './components/pricing';
 import { FAQ } from './components/faq';
 import { Footer } from './components/footer';
 
+// Counter logic
+const START_DATE = new Date('2025-01-01');
+const START_COUNT = 2734;
+
+function getDailyIncrement(date: Date): number {
+  const dateStr = date.toISOString().split('T')[0];
+  let hash = 0;
+  for (let i = 0; i < dateStr.length; i++) {
+    hash = ((hash << 5) - hash) + dateStr.charCodeAt(i);
+    hash = hash & hash;
+  }
+  return Math.abs(hash) % 11; // 0-10
+}
+
+function calculateCount(): number {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  let total = START_COUNT;
+  const currentDate = new Date(START_DATE);
+  currentDate.setHours(0, 0, 0, 0);
+
+  while (currentDate < today) {
+    currentDate.setDate(currentDate.getDate() + 1);
+    total += getDailyIncrement(currentDate);
+  }
+
+  return total;
+}
+
 export default function Home() {
   const [plyUrl, setPlyUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [shareableLink, setShareableLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [count, setCount] = useState(START_COUNT);
+
+  // Calculate counter on mount
+  useEffect(() => {
+    setCount(calculateCount());
+  }, []);
 
   // Cleanup blob URL when component unmounts or plyUrl changes
   useEffect(() => {
@@ -157,8 +193,11 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Powered by text */}
-          <div className="absolute bottom-4 right-4 z-10">
+          {/* Bottom right section */}
+          <div className="absolute bottom-4 right-4 z-10 text-right">
+            <p className="text-white/90 text-sm font-medium mb-1">
+              {count.toLocaleString()} <span className="text-white/70">memories recreated</span>
+            </p>
             <p className="text-white/60 text-xs">
               {"Powered by Apple's SHARP Gaussian splat model."}
             </p>
