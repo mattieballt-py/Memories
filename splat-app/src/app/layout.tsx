@@ -25,16 +25,22 @@ export const metadata: Metadata = {
   description: "Turn any photo into an interactive 3D scene instantly. Create shareable gaussian splat 3D memories from a single image. Free online tool - no signup required.",
   keywords: "photo to 3D scene, image to 3D, gaussian splat from photo, create 3D memories online, one photo 3D world, turn photo into 3D model, free 3D scene creator",
   authors: [{ name: "Timeless Mind" }],
+  icons: {
+    icon: '/icon.jpg',
+    apple: '/icon.jpg',
+  },
   openGraph: {
     title: "Photo to 3D Scene: Create Worlds from One Image Free",
     description: "Transform a single photo into an interactive 3D gaussian splat scene. Share your memories in immersive 3D.",
     type: "website",
     siteName: "Timeless Mind",
+    images: ['/icon.jpg'],
   },
   twitter: {
     card: "summary_large_image",
     title: "Photo to 3D Scene: Create Worlds from One Image Free",
     description: "Turn any photo into an interactive 3D scene instantly. Free online tool.",
+    images: ['/icon.jpg'],
   },
   robots: {
     index: true,
