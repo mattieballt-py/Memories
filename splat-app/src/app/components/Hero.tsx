@@ -2,8 +2,47 @@
 
 import { ImagePlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useEffect, useState } from "react"
+
+// Starting date and count
+const START_DATE = new Date('2025-01-01')
+const START_COUNT = 2734
+
+// Generate deterministic random number (0-10) based on date
+function getDailyIncrement(date: Date): number {
+  const dateStr = date.toISOString().split('T')[0]
+  let hash = 0
+  for (let i = 0; i < dateStr.length; i++) {
+    hash = ((hash << 5) - hash) + dateStr.charCodeAt(i)
+    hash = hash & hash
+  }
+  return Math.abs(hash) % 11 // 0-10
+}
+
+// Calculate total count based on days elapsed
+function calculateCount(): number {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  let total = START_COUNT
+  const currentDate = new Date(START_DATE)
+  currentDate.setHours(0, 0, 0, 0)
+
+  while (currentDate < today) {
+    currentDate.setDate(currentDate.getDate() + 1)
+    total += getDailyIncrement(currentDate)
+  }
+
+  return total
+}
 
 export function Hero() {
+  const [count, setCount] = useState(START_COUNT)
+
+  useEffect(() => {
+    setCount(calculateCount())
+  }, [])
+
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center pt-16">
       {/* Background Image */}
@@ -42,8 +81,11 @@ export function Hero() {
         </p>
       </div>
 
-      {/* Powered by text */}
-      <div className="absolute bottom-4 right-4 z-10">
+      {/* Bottom right section */}
+      <div className="absolute bottom-4 right-4 z-10 text-right">
+        <p className="text-white/90 text-sm font-medium mb-1">
+          {count.toLocaleString()} <span className="text-white/70">memories recreated</span>
+        </p>
         <p className="text-white/60 text-xs">
           {"Powered by Apple's SHARP Gaussian splat model."}
         </p>
