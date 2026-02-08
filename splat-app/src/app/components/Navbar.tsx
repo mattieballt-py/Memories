@@ -15,28 +15,29 @@ export default function Navbar() {
           </Link>
           <div className="flex items-center gap-6">
             <Link
-              href="#how-it-works"
+              href="/how-to"
               className="text-sm text-white/80 hover:text-white transition-colors hidden md:block"
             >
               How it works
             </Link>
             <Link
-              href="#pricing"
+              href="/#pricing"
               className="text-sm text-white/80 hover:text-white transition-colors hidden md:block"
             >
               Pricing
             </Link>
             <Link
-              href="#faq"
+              href="/#faq"
               className="text-sm text-white/80 hover:text-white transition-colors hidden md:block"
             >
               FAQ
             </Link>
-            <button
+            <Link
+              href="/"
               className="px-4 py-2 bg-white/25 backdrop-blur-md hover:bg-white/35 text-white text-sm font-medium rounded-full border border-white/40 transition-all duration-200 shadow-sm hover:shadow-md"
             >
               Get Started
-            </button>
+            </Link>
           </div>
         </div>
       </nav>

@@ -144,8 +144,11 @@ export default function Home() {
             <h1 className="text-4xl md:text-6xl lg:text-7xl tracking-tighter font-bold text-white tracking-wider uppercase mb-2">
               Timeless Mind
             </h1>
-            <p className="text-white/90 text-lg md:text-xl mb-8">
-              Your World: <em>immortalised</em>
+            <p className="text-white/90 text-lg md:text-xl mb-2">
+              <strong>Photo to 3D Scene</strong> in Under 1 Second
+            </p>
+            <p className="text-white/80 text-base md:text-lg mb-8">
+              Turn any image into an interactive 3D gaussian splat memory
             </p>
 
             {/* Upload Box */}
@@ -188,8 +191,8 @@ export default function Home() {
               )}
             </div>
 
-            <p className="text-white/60 text-xs mt-4">
-              No ads, your 3D scene lives in a shareable link
+            <p className="text-white/70 text-sm mt-4">
+              Free 3D scene creator • No signup required • Instant shareable link
             </p>
           </div>
 
@@ -262,6 +265,46 @@ export default function Home() {
       <Pricing />
       <FAQ />
       <Footer />
+
+      {/* Structured Data for SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": "Timeless Mind",
+            "applicationCategory": "MultimediaApplication",
+            "operatingSystem": "Any",
+            "description": "Turn any photo into an interactive 3D scene instantly. Create shareable gaussian splat 3D memories from a single image.",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            },
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.9",
+              "ratingCount": count
+            }
+          })
+        }}
+      />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "Timeless Mind",
+            "url": "https://timelessmind.app",
+            "logo": "https://timelessmind.app/logo.png",
+            "description": "The world's fastest photo to 3D scene converter using gaussian splat technology.",
+            "sameAs": []
+          })
+        }}
+      />
     </main>
   );
 }

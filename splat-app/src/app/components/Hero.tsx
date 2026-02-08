@@ -6,7 +6,7 @@ import { useEffect, useState } from "react"
 
 // Starting date and count
 const START_DATE = new Date('2025-01-01')
-const START_COUNT = 2734
+const START_COUNT = 734
 
 // Generate deterministic random number (0-10) based on date
 function getDailyIncrement(date: Date): number {
@@ -84,7 +84,7 @@ export function Hero() {
       {/* Bottom right section */}
       <div className="absolute bottom-4 right-4 z-10 text-right">
         <p className="text-white/90 text-sm font-medium mb-1">
-          {count.toLocaleString()} <span className="text-white/70">memories recreated</span>
+          {count.toLocaleString()} <span className="text-white/50">memories recreated</span>
         </p>
         <p className="text-white/60 text-xs">
           {"Powered by Apple's SHARP Gaussian splat model."}
