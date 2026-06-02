@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { put } from '@vercel/blob';
 
+function normalizeModalApiUrl(rawUrl: string): string {
+  const url = new URL(rawUrl);
+
+  if (url.pathname === '/' || url.pathname === '/predict' || url.pathname === '/predict/ply') {
+    url.pathname = '/splat';
+  }
+
+  return url.toString();
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Check usage limit before processing
@@ -30,10 +40,11 @@ export async function POST(request: NextRequest) {
     // Optional: add focal length if needed
     // modalFormData.append('f_px', '1000');
 
-    // Get Modal endpoint URL from environment variable (should include /predict/ply)
-    const modalApiUrl =
+    // Get Modal endpoint URL from environment variable and normalize to the web route.
+    const modalApiUrl = normalizeModalApiUrl(
       process.env.NEXT_PUBLIC_SPLAT_API_URL ||
-      'https://mattieballt-py--sharp-api-fastapi-app.modal.run/predict/ply';
+      'https://mattieballt-py--sharp-api-fastapi-app.modal.run/splat'
+    );
 
     console.log('Calling Modal API:', modalApiUrl);
     console.log('File details:', {
